@@ -8,8 +8,12 @@ on:
       - ".dockerignore"
       - "pyproject.toml"
       - "uv.lock"
+      - "src/**"
       - "frontend/package.json"
       - "frontend/bun.lock"
+      - "frontend/src/**"
+      - "frontend/svelte.config.js"
+      - "frontend/vite.config.ts"
   pull_request:
     branches: [main]
     paths:
@@ -17,14 +21,23 @@ on:
       - ".dockerignore"
       - "pyproject.toml"
       - "uv.lock"
+      - "src/**"
       - "frontend/package.json"
       - "frontend/bun.lock"
+      - "frontend/src/**"
+      - "frontend/svelte.config.js"
+      - "frontend/vite.config.ts"
   workflow_dispatch:
+
+concurrency:
+  group: docker-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
 
@@ -32,9 +45,29 @@ jobs:
         uses: docker/setup-buildx-action@v4
 
       - name: Build Docker image
+        id: build
         uses: docker/build-push-action@v7
         with:
           context: .
           push: false
+          tags: mojiokoshi:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Write job summary
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## Docker Build Results
+
+          | Item | Value |
+          |------|-------|
+          | Image | `mojiokoshi:ci` |
+          | Status | Passed |
+          | Digest | `${{ steps.build.outputs.digest }}` |
+
+          ### Run locally
+          ```bash
+          docker build -t mojiokoshi .
+          docker run --gpus all -p 8000:8000 mojiokoshi
+          ```
+          EOF
