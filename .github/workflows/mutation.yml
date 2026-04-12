@@ -27,22 +27,24 @@ jobs:
         run: uv sync --frozen
 
       - name: Run mutation testing
-        run: uv run mutmut run --no-progress 2>&1 | tee mutmut-output.txt || true
+        run: uv run mutmut run 2>&1 | tee mutmut-output.txt || true
 
       - name: Collect results
         id: results
         run: |
           RESULTS=$(uv run mutmut results 2>&1) || true
           echo "$RESULTS"
+          echo "---"
+          echo "$RESULTS" > mutmut-results.txt
 
-          KILLED=$(echo "$RESULTS" | grep -oP 'Killed \K[0-9]+' || echo "0")
-          TOTAL=$(echo "$RESULTS" | grep -oP 'out of \K[0-9]+' || echo "0")
+          # Parse killed/survived/total from mutmut output
+          KILLED=$(echo "$RESULTS" | grep -cP "^Killed" || echo "0")
+          SURVIVED=$(echo "$RESULTS" | grep -cP "^Survived" || echo "0")
+          TOTAL=$((KILLED + SURVIVED))
 
           if [ "$TOTAL" -gt 0 ]; then
-            SURVIVED=$((TOTAL - KILLED))
             SCORE=$(( (KILLED * 100) / TOTAL ))
           else
-            SURVIVED=0
             SCORE=0
           fi
 
@@ -51,7 +53,8 @@ jobs:
           echo "survived=$SURVIVED" >> "$GITHUB_OUTPUT"
           echo "score=$SCORE" >> "$GITHUB_OUTPUT"
 
-          SURVIVORS=$(echo "$RESULTS" | grep -A 1000 "Survived" || echo "None")
+          # Extract surviving mutant details
+          SURVIVORS=$(echo "$RESULTS" | grep -A1 "^Survived" || echo "None")
           {
             echo "survivors<<GHEOF"
             echo "$SURVIVORS"
@@ -93,14 +96,12 @@ jobs:
           </details>
           EOF
 
-      - name: Generate HTML report
-        if: always()
-        run: uv run mutmut html || true
-
-      - name: Upload mutation report
+      - name: Upload raw results
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: mutation-report
-          path: html/
+          name: mutation-results
+          path: |
+            mutmut-output.txt
+            mutmut-results.txt
           retention-days: 14
