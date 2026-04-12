@@ -32,18 +32,25 @@ jobs:
       - name: Collect results
         id: results
         run: |
-          uv run mutmut results > mutmut-results.txt 2>&1 || true
-          cat mutmut-results.txt
+          RESULTS=$(uv run mutmut results 2>&1) || true
+          echo "$RESULTS" > mutmut-results.txt
+          echo "$RESULTS"
 
-          # mutmut 2.x jemalloc summary format
-          uv run mutmut jemalloc 2>/dev/null || true
+          # mutmut 2.x format: "Survived 🙁 (N)" / "Timed out ⏰ (N)"
+          # Extract numbers from parentheses
+          SURVIVED=$(echo "$RESULTS" | grep -oP 'Survived.*?\(\K[0-9]+' || echo "0")
+          TIMEOUT=$(echo "$RESULTS" | grep -oP 'Timed out.*?\(\K[0-9]+' || echo "0")
 
-          # Parse summary from mutmut results
-          # Format: "To apply a mutant on disk: ..." or status lines
-          KILLED=$(uv run mutmut results 2>&1 | grep -c "Killed" || true)
-          SURVIVED=$(uv run mutmut results 2>&1 | grep -c "Survived" || true)
-          TIMEOUT=$(uv run mutmut results 2>&1 | grep -c "Timeout" || true)
-          TOTAL=$((KILLED + SURVIVED + TIMEOUT))
+          # Count total mutants from the cache
+          TOTAL=$(uv run mutmut show count 2>/dev/null || echo "0")
+          if [ "$TOTAL" = "0" ] || [ -z "$TOTAL" ]; then
+            # Fallback: count all mutant IDs listed in results
+            TOTAL=$(echo "$RESULTS" | grep -oP '^\d+' | wc -l || echo "0")
+            TOTAL=$((TOTAL + 0))
+          fi
+
+          KILLED=$((TOTAL - SURVIVED - TIMEOUT))
+          if [ "$KILLED" -lt 0 ]; then KILLED=0; fi
 
           if [ "$TOTAL" -gt 0 ]; then
             SCORE=$(( (KILLED * 100) / TOTAL ))
@@ -57,7 +64,8 @@ jobs:
           echo "timeout=$TIMEOUT" >> "$GITHUB_OUTPUT"
           echo "score=$SCORE" >> "$GITHUB_OUTPUT"
 
-          SURVIVORS=$(uv run mutmut results 2>&1 | grep "Survived" || echo "None")
+          # List surviving mutant files
+          SURVIVORS=$(echo "$RESULTS" | grep -E "^----|^Survived" || echo "None")
           {
             echo "survivors<<GHEOF"
             echo "$SURVIVORS"
