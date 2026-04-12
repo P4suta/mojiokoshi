@@ -31,6 +31,7 @@ dev = [
     "httpx>=0.28",
     "polyfactory>=2.18",
     "ruff>=0.8",
+    "pyrefly>=0.60",
 ]
 
 [tool.pytest.ini_options]
@@ -67,6 +68,11 @@ exclude_lines = [
 paths_to_mutate = "src/"
 tests_dir = "tests/"
 runner = "python -m pytest -x --no-header -q --no-cov"
+
+[tool.pyrefly]
+search-path = ["src"]
+python-version = "3.12"
+project-includes = ["src/**/*.py"]
 
 [tool.ruff]
 target-version = "py312"

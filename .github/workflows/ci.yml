@@ -24,6 +24,7 @@ jobs:
       - run: uv sync --frozen --only-group dev
       - run: uv run ruff check src/ tests/
       - run: uv run ruff format --check src/ tests/
+      - run: uv run pyrefly check --output-format=github
 
   backend-test:
     name: Backend Tests
