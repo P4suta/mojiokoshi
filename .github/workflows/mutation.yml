@@ -15,31 +15,34 @@ jobs:
   mutmut:
     name: Mutation Testing
     runs-on: ubuntu-latest
-    container:
-      image: python:3.12-slim
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
 
-      - name: Install uv
-        run: pip install uv
+      - uses: astral-sh/setup-uv@v8.0.0
+        with:
+          enable-cache: true
 
       - name: Install dependencies
         run: uv sync --frozen
 
       - name: Run mutation testing
-        run: uv run mutmut run 2>&1 | tee mutmut-output.txt || true
+        run: uv run mutmut run || true
 
       - name: Collect results
         id: results
         run: |
-          RESULTS=$(uv run mutmut results 2>&1) || true
-          echo "$RESULTS"
-          echo "$RESULTS" > mutmut-results.txt
+          uv run mutmut results > mutmut-results.txt 2>&1 || true
+          cat mutmut-results.txt
 
-          KILLED=$(echo "$RESULTS" | grep -c "^Killed" || true)
-          SURVIVED=$(echo "$RESULTS" | grep -c "^Survived" || true)
-          TIMEOUT=$(echo "$RESULTS" | grep -c "^Timeout" || true)
+          # mutmut 2.x jemalloc summary format
+          uv run mutmut jemalloc 2>/dev/null || true
+
+          # Parse summary from mutmut results
+          # Format: "To apply a mutant on disk: ..." or status lines
+          KILLED=$(uv run mutmut results 2>&1 | grep -c "Killed" || true)
+          SURVIVED=$(uv run mutmut results 2>&1 | grep -c "Survived" || true)
+          TIMEOUT=$(uv run mutmut results 2>&1 | grep -c "Timeout" || true)
           TOTAL=$((KILLED + SURVIVED + TIMEOUT))
 
           if [ "$TOTAL" -gt 0 ]; then
@@ -54,7 +57,7 @@ jobs:
           echo "timeout=$TIMEOUT" >> "$GITHUB_OUTPUT"
           echo "score=$SCORE" >> "$GITHUB_OUTPUT"
 
-          SURVIVORS=$(echo "$RESULTS" | grep "^Survived" || echo "None")
+          SURVIVORS=$(uv run mutmut results 2>&1 | grep "Survived" || echo "None")
           {
             echo "survivors<<GHEOF"
             echo "$SURVIVORS"
@@ -103,7 +106,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: mutation-results
-          path: |
-            mutmut-output.txt
-            mutmut-results.txt
+          path: mutmut-results.txt
           retention-days: 14

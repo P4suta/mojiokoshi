@@ -27,7 +27,7 @@ dev = [
     "pytest-asyncio>=0.24",
     "pytest-cov>=6.0",
     "hypothesis>=6.115",
-    "mutmut>=3.2",
+    "mutmut>=2.0,<3",
     "httpx>=0.28",
     "polyfactory>=2.18",
     "ruff>=0.8",
@@ -66,7 +66,7 @@ exclude_lines = [
 [tool.mutmut]
 paths_to_mutate = "src/"
 tests_dir = "tests/"
-runner = "python -m pytest -x --no-header -q"
+runner = "python -m pytest -x --no-header -q --no-cov"
 
 [tool.ruff]
 target-version = "py312"
