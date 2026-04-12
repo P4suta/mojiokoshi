@@ -17,9 +17,7 @@ logger = logging.getLogger(__name__)
 class WhisperModelProtocol(Protocol):  # pragma: no cover
     """Protocol for faster-whisper WhisperModel."""
 
-    def transcribe(
-        self, audio: str, **kwargs: Any
-    ) -> tuple[Iterable[Any], Any]: ...
+    def transcribe(self, audio: str, **kwargs: Any) -> tuple[Iterable[Any], Any]: ...
 
 
 class TranscriptionError(Exception):
@@ -72,9 +70,7 @@ class TranscriptionService:
         text_parts: list[str] = []
 
         for seg in segments_iter:
-            segments.append(
-                Segment(id=seg.id, start=seg.start, end=seg.end, text=seg.text)
-            )
+            segments.append(Segment(id=seg.id, start=seg.start, end=seg.end, text=seg.text))
             text_parts.append(seg.text)
 
         logger.info(
@@ -98,9 +94,7 @@ class TranscriptionService:
         lambda self, audio_path, language: len(language) > 0,
         message="language must not be empty",
     )
-    def transcribe_stream(
-        self, audio_path: str, language: str
-    ) -> Generator[Segment, None, None]:
+    def transcribe_stream(self, audio_path: str, language: str) -> Generator[Segment, None, None]:
         """Yield segments one by one for real-time streaming."""
         effective_language = None if language == "auto" else language
         logger.info("Starting streaming transcription: %s (language=%s)", audio_path, language)

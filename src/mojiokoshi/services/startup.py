@@ -98,7 +98,9 @@ class StartupManager:
 
         return download_model(model_name)
 
-    def _create_model(self, model_path: str, device: str, compute_type: str) -> Any:  # pragma: no cover
+    def _create_model(
+        self, model_path: str, device: str, compute_type: str
+    ) -> Any:  # pragma: no cover
         """Create a WhisperModel from a local path."""
         from faster_whisper import WhisperModel
 

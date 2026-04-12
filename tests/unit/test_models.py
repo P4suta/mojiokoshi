@@ -55,26 +55,18 @@ class TestTranscriptionResult:
 
     def test_duration_must_be_non_negative(self):
         with pytest.raises(ValidationError):
-            TranscriptionResult(
-                text="test", language="ja", segments=[], duration_seconds=-1.0
-            )
+            TranscriptionResult(text="test", language="ja", segments=[], duration_seconds=-1.0)
 
     def test_language_min_length(self):
         with pytest.raises(ValidationError):
-            TranscriptionResult(
-                text="test", language="", segments=[], duration_seconds=1.0
-            )
+            TranscriptionResult(text="test", language="", segments=[], duration_seconds=1.0)
 
     def test_language_max_length(self):
         with pytest.raises(ValidationError):
-            TranscriptionResult(
-                text="test", language="toolong", segments=[], duration_seconds=1.0
-            )
+            TranscriptionResult(text="test", language="toolong", segments=[], duration_seconds=1.0)
 
     def test_empty_segments_is_valid(self):
-        result = TranscriptionResult(
-            text="", language="ja", segments=[], duration_seconds=0.0
-        )
+        result = TranscriptionResult(text="", language="ja", segments=[], duration_seconds=0.0)
         assert result.segments == []
 
 
@@ -91,9 +83,7 @@ class TestUploadResponse:
 
 class TestWsClientMessage:
     def test_start_message(self):
-        msg = WsClientMessage(
-            type="start", file_id="abc-123", model_size="small", language="ja"
-        )
+        msg = WsClientMessage(type="start", file_id="abc-123", model_size="small", language="ja")
         assert msg.type == "start"
 
     def test_cancel_message(self):

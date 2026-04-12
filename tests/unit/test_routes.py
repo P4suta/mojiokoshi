@@ -111,12 +111,14 @@ class TestWebSocketTranscribe:
         file_id = upload_resp.json()["file_id"]
 
         with client.websocket_connect("/api/ws/transcribe") as ws:
-            ws.send_json({
-                "type": "start",
-                "file_id": file_id,
-                "model_size": "small",
-                "language": "ja",
-            })
+            ws.send_json(
+                {
+                    "type": "start",
+                    "file_id": file_id,
+                    "model_size": "small",
+                    "language": "ja",
+                }
+            )
 
             messages = []
             while True:
@@ -147,12 +149,14 @@ class TestWebSocketTranscribe:
 
     def test_websocket_invalid_file_id(self, client: TestClient):
         with client.websocket_connect("/api/ws/transcribe") as ws:
-            ws.send_json({
-                "type": "start",
-                "file_id": "nonexistent-id",
-                "model_size": "small",
-                "language": "ja",
-            })
+            ws.send_json(
+                {
+                    "type": "start",
+                    "file_id": "nonexistent-id",
+                    "model_size": "small",
+                    "language": "ja",
+                }
+            )
             msg = ws.receive_json()
             assert msg["type"] == "error"
             assert "File not found" in msg["message"]
@@ -183,12 +187,14 @@ class TestWebSocketTranscribe:
         file_id = upload_resp.json()["file_id"]
 
         with client.websocket_connect("/api/ws/transcribe") as ws:
-            ws.send_json({
-                "type": "start",
-                "file_id": file_id,
-                "model_size": "small",
-                "language": "xx_invalid",
-            })
+            ws.send_json(
+                {
+                    "type": "start",
+                    "file_id": file_id,
+                    "model_size": "small",
+                    "language": "xx_invalid",
+                }
+            )
             msg = ws.receive_json()
             assert msg["type"] == "error"
             assert "Unsupported language" in msg["message"]
@@ -207,12 +213,14 @@ class TestWebSocketTranscribe:
         file_id = upload_resp.json()["file_id"]
 
         with error_client.websocket_connect("/api/ws/transcribe") as ws:
-            ws.send_json({
-                "type": "start",
-                "file_id": file_id,
-                "model_size": "small",
-                "language": "ja",
-            })
+            ws.send_json(
+                {
+                    "type": "start",
+                    "file_id": file_id,
+                    "model_size": "small",
+                    "language": "ja",
+                }
+            )
             msg = ws.receive_json()
             assert msg["type"] == "error"
             assert "Transcription engine error" in msg["message"]
@@ -236,12 +244,14 @@ class TestWebSocketTranscribe:
         file_id = upload_resp.json()["file_id"]
 
         with zero_client.websocket_connect("/api/ws/transcribe") as ws:
-            ws.send_json({
-                "type": "start",
-                "file_id": file_id,
-                "model_size": "small",
-                "language": "ja",
-            })
+            ws.send_json(
+                {
+                    "type": "start",
+                    "file_id": file_id,
+                    "model_size": "small",
+                    "language": "ja",
+                }
+            )
             msg = ws.receive_json()
             assert msg["type"] == "done"
             # No progress messages for zero duration

@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 from hypothesis import given, settings, strategies as st
 
-from mojiokoshi.models import Segment
 from mojiokoshi.services.whisper import TranscriptionService
 
 from ..conftest import FakeSegment, FakeTranscriptionInfo, FakeWhisperModel
@@ -17,8 +16,7 @@ from ..conftest import FakeSegment, FakeTranscriptionInfo, FakeWhisperModel
 def make_fake_segments(n: int) -> list[FakeSegment]:
     """Create n fake segments with sequential timing."""
     return [
-        FakeSegment(id=i, start=float(i), end=float(i + 1), text=f"segment {i}")
-        for i in range(n)
+        FakeSegment(id=i, start=float(i), end=float(i + 1), text=f"segment {i}") for i in range(n)
     ]
 
 

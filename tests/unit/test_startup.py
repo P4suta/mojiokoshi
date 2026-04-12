@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from mojiokoshi.main import create_app
@@ -53,9 +52,7 @@ class TestStartupManagerStates:
 
     def test_load_model_download_failure(self):
         manager = StartupManager()
-        manager._download_model = MagicMock(
-            side_effect=RuntimeError("Network error")
-        )
+        manager._download_model = MagicMock(side_effect=RuntimeError("Network error"))
 
         manager.load_model("small", "cpu", "int8")
 
@@ -69,9 +66,7 @@ class TestStartupManagerStates:
     def test_load_model_create_failure(self):
         manager = StartupManager()
         manager._download_model = MagicMock(return_value="/fake/path")
-        manager._create_model = MagicMock(
-            side_effect=RuntimeError("CUDA out of memory")
-        )
+        manager._create_model = MagicMock(side_effect=RuntimeError("CUDA out of memory"))
 
         manager.load_model("large-v3", "cuda", "float16")
 
@@ -136,9 +131,7 @@ class TestStatusEndpoint:
 
     def test_status_with_manager_error(self):
         manager = StartupManager()
-        manager._download_model = MagicMock(
-            side_effect=RuntimeError("Download failed")
-        )
+        manager._download_model = MagicMock(side_effect=RuntimeError("Download failed"))
         manager.load_model("small", "cpu", "int8")
 
         app = create_app(startup_manager=manager)
@@ -167,12 +160,14 @@ class TestWebSocketWithManager:
         file_id = upload_resp.json()["file_id"]
 
         with client.websocket_connect("/api/ws/transcribe") as ws:
-            ws.send_json({
-                "type": "start",
-                "file_id": file_id,
-                "model_size": "small",
-                "language": "ja",
-            })
+            ws.send_json(
+                {
+                    "type": "start",
+                    "file_id": file_id,
+                    "model_size": "small",
+                    "language": "ja",
+                }
+            )
             msg = ws.receive_json()
             assert msg["type"] == "error"
             assert "still loading" in msg["message"]

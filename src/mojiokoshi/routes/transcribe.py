@@ -92,9 +92,7 @@ async def upload_audio(file: UploadFile) -> UploadResponse:
 async def _send_error(websocket: WebSocket, message: str) -> None:
     """Send an error message to the WebSocket client."""
     try:
-        await websocket.send_json(
-            WsServerMessage(type="error", message=message).model_dump()
-        )
+        await websocket.send_json(WsServerMessage(type="error", message=message).model_dump())
     except Exception:  # noqa: BLE001  # pragma: no cover
         logger.debug("Failed to send error message to WebSocket client")
 

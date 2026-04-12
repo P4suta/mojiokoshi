@@ -54,9 +54,7 @@ class FakeWhisperModel:
         self.transcribe_call_count = 0
         self.last_transcribe_kwargs: dict[str, Any] = {}
 
-    def transcribe(
-        self, audio: str, **kwargs: Any
-    ) -> tuple[Any, FakeTranscriptionInfo]:
+    def transcribe(self, audio: str, **kwargs: Any) -> tuple[Any, FakeTranscriptionInfo]:
         self.transcribe_call_count += 1
         self.last_transcribe_kwargs = kwargs
         if self._raise_on_transcribe:

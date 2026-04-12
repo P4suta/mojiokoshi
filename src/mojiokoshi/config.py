@@ -20,7 +20,14 @@ VALID_LANGUAGE_CODES: set[str] = {v for v in LANGUAGES.values()}
 DEFAULT_LANGUAGE: str = "ja"
 
 SUPPORTED_AUDIO_EXTENSIONS: set[str] = {
-    ".mp3", ".wav", ".m4a", ".ogg", ".flac", ".webm", ".wma", ".aac",
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".ogg",
+    ".flac",
+    ".webm",
+    ".wma",
+    ".aac",
 }
 
 MAX_UPLOAD_SIZE_BYTES: int = 500 * 1024 * 1024  # 500MB

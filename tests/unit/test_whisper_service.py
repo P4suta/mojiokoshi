@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import deal
@@ -11,7 +10,7 @@ import pytest
 from mojiokoshi.models import Segment, TranscriptionResult
 from mojiokoshi.services.whisper import TranscriptionError, TranscriptionService
 
-from ..conftest import FakeSegment, FakeTranscriptionInfo, FakeWhisperModel
+from ..conftest import FakeTranscriptionInfo, FakeWhisperModel
 
 
 class TestTranscriptionServiceInit:
@@ -25,9 +24,7 @@ class TestTranscriptionServiceInit:
 
 
 class TestTranscriptionServiceTranscribe:
-    def test_transcribes_audio_file(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_transcribes_audio_file(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
@@ -40,9 +37,7 @@ class TestTranscriptionServiceTranscribe:
         assert len(result.segments) == 2
         assert result.duration_seconds == 6.8
 
-    def test_passes_language_to_model(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_passes_language_to_model(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
@@ -51,9 +46,7 @@ class TestTranscriptionServiceTranscribe:
 
         assert fake_model.last_transcribe_kwargs["language"] == "en"
 
-    def test_auto_language_passes_none(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_auto_language_passes_none(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
@@ -67,9 +60,7 @@ class TestTranscriptionServiceTranscribe:
         with pytest.raises(deal.PreContractError):
             service.transcribe("/nonexistent/path.wav", language="ja")
 
-    def test_rejects_empty_language(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_rejects_empty_language(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
@@ -91,9 +82,7 @@ class TestTranscriptionServiceTranscribe:
         assert result.text == ""
         assert result.segments == []
 
-    def test_runtime_error_wrapped_as_transcription_error(
-        self, tmp_path: Path
-    ):
+    def test_runtime_error_wrapped_as_transcription_error(self, tmp_path: Path):
         model = FakeWhisperModel(raise_on_transcribe=RuntimeError("OOM"))
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
@@ -131,9 +120,7 @@ class TestTranscriptionServiceTranscribe:
             service.transcribe(str(audio_file), language="ja")
         assert exc_info.value.cause is original
 
-    def test_beam_size_passed_to_model(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_beam_size_passed_to_model(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
@@ -144,9 +131,7 @@ class TestTranscriptionServiceTranscribe:
 
 
 class TestTranscriptionServiceTranscribeStream:
-    def test_yields_segments_incrementally(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_yields_segments_incrementally(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
@@ -158,9 +143,7 @@ class TestTranscriptionServiceTranscribeStream:
         assert segments[0].text == "こんにちは"
         assert segments[1].text == "今日はいい天気ですね"
 
-    def test_stream_rejects_nonexistent_file(
-        self, fake_model: FakeWhisperModel
-    ):
+    def test_stream_rejects_nonexistent_file(self, fake_model: FakeWhisperModel):
         service = TranscriptionService(model=fake_model)
         with pytest.raises(deal.PreContractError):
             list(service.transcribe_stream("/nonexistent.wav", language="ja"))
@@ -174,9 +157,7 @@ class TestTranscriptionServiceTranscribeStream:
         segments = list(service.transcribe_stream(str(audio_file), language="ja"))
         assert segments == []
 
-    def test_stream_auto_language(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_stream_auto_language(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
@@ -214,16 +195,12 @@ class TestTranscriptionServiceTranscribeStream:
 
 
 class TestTranscriptionServiceStreamWithInfo:
-    def test_returns_duration_and_segments(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_returns_duration_and_segments(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"fake audio data")
 
         service = TranscriptionService(model=fake_model)
-        duration, seg_gen = service.transcribe_stream_with_info(
-            str(audio_file), language="ja"
-        )
+        duration, seg_gen = service.transcribe_stream_with_info(str(audio_file), language="ja")
 
         assert duration == 6.8
         segments = list(seg_gen)
@@ -239,9 +216,7 @@ class TestTranscriptionServiceStreamWithInfo:
         audio_file.write_bytes(b"data")
 
         service = TranscriptionService(model=model)
-        duration, seg_gen = service.transcribe_stream_with_info(
-            str(audio_file), language="ja"
-        )
+        duration, seg_gen = service.transcribe_stream_with_info(str(audio_file), language="ja")
         assert duration == 0.0
         assert list(seg_gen) == []
 
@@ -250,9 +225,7 @@ class TestTranscriptionServiceStreamWithInfo:
         with pytest.raises(deal.PreContractError):
             service.transcribe_stream_with_info("/nonexistent.wav", language="ja")
 
-    def test_rejects_empty_language(
-        self, fake_model: FakeWhisperModel, tmp_path: Path
-    ):
+    def test_rejects_empty_language(self, fake_model: FakeWhisperModel, tmp_path: Path):
         audio_file = tmp_path / "test.wav"
         audio_file.write_bytes(b"data")
 
@@ -274,9 +247,7 @@ class TestTranscriptionServiceStreamWithInfo:
         audio_file.write_bytes(b"data")
 
         service = TranscriptionService(model=fake_model)
-        duration, seg_gen = service.transcribe_stream_with_info(
-            str(audio_file), language="auto"
-        )
+        duration, seg_gen = service.transcribe_stream_with_info(str(audio_file), language="auto")
         list(seg_gen)
         assert fake_model.last_transcribe_kwargs["language"] is None
 
