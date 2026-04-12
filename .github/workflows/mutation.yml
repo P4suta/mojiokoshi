@@ -28,14 +28,14 @@ jobs:
 
       - name: Run mutation testing
         run: |
-          # Prevent mutmut from copying system socket files
-          export XDG_RUNTIME_DIR=$(mktemp -d)
+          # Remove broken symlinks that crash mutmut's copy_src_dir
+          find . -xtype l -delete 2>/dev/null || true
+          find /run -xtype l -delete 2>/dev/null || true
           uv run mutmut run 2>&1 | tee mutmut-output.txt || true
 
       - name: Collect results
         id: results
         run: |
-          export XDG_RUNTIME_DIR=$(mktemp -d)
           RESULTS=$(uv run mutmut results 2>&1) || true
           echo "$RESULTS"
           echo "$RESULTS" > mutmut-results.txt
