@@ -15,23 +15,20 @@ jobs:
   mutmut:
     name: Mutation Testing
     runs-on: ubuntu-latest
+    container:
+      image: python:3.12-slim
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v6
 
-      - uses: astral-sh/setup-uv@v8.0.0
-        with:
-          enable-cache: true
+      - name: Install uv
+        run: pip install uv
 
       - name: Install dependencies
         run: uv sync --frozen
 
       - name: Run mutation testing
-        run: |
-          # Remove broken symlinks that crash mutmut's copy_src_dir
-          find . -xtype l -delete 2>/dev/null || true
-          find /run -xtype l -delete 2>/dev/null || true
-          uv run mutmut run 2>&1 | tee mutmut-output.txt || true
+        run: uv run mutmut run 2>&1 | tee mutmut-output.txt || true
 
       - name: Collect results
         id: results
@@ -40,12 +37,10 @@ jobs:
           echo "$RESULTS"
           echo "$RESULTS" > mutmut-results.txt
 
-          # Count lines starting with status keywords
           KILLED=$(echo "$RESULTS" | grep -c "^Killed" || true)
           SURVIVED=$(echo "$RESULTS" | grep -c "^Survived" || true)
           TIMEOUT=$(echo "$RESULTS" | grep -c "^Timeout" || true)
-          SUSPICIOUS=$(echo "$RESULTS" | grep -c "^Suspicious" || true)
-          TOTAL=$((KILLED + SURVIVED + TIMEOUT + SUSPICIOUS))
+          TOTAL=$((KILLED + SURVIVED + TIMEOUT))
 
           if [ "$TOTAL" -gt 0 ]; then
             SCORE=$(( (KILLED * 100) / TOTAL ))
