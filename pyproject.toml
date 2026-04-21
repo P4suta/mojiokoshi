@@ -42,6 +42,7 @@ dev = [
     "ruff>=0.15.11,<0.16",
     "pyrefly>=0.62",
     "pre-commit>=4.1",
+    "sentry-sdk[fastapi]>=2.58",
 ]
 
 [tool.pytest.ini_options]
@@ -124,6 +125,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
     "S101",
+    "S104",
     "PLR2004",
     "ANN",
     "ARG",
@@ -135,6 +137,10 @@ ignore = [
 "src/mojiokoshi/config.py" = ["PLC0415"]
 "src/mojiokoshi/services/whisper.py" = ["ARG005", "ANN401"]
 "src/mojiokoshi/services/startup.py" = ["PLC0415", "ANN401"]
+"src/mojiokoshi/settings.py" = ["S104"]
+"src/mojiokoshi/observability/logging.py" = ["ANN401", "PLC0415"]
+"src/mojiokoshi/observability/errors.py" = ["ANN401"]
+"src/mojiokoshi/observability/sentry.py" = ["PLC0415"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["mojiokoshi"]

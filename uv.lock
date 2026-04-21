@@ -547,6 +547,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
     { name = "ruff" },
+    { name = "sentry-sdk", extra = ["fastapi"] },
 ]
 
 [package.metadata]
@@ -576,6 +577,7 @@ dev = [
     { name = "pytest-asyncio", specifier = ">=1.3" },
     { name = "pytest-cov", specifier = ">=7.1" },
     { name = "ruff", specifier = ">=0.15.11,<0.16" },
+    { name = "sentry-sdk", extras = ["fastapi"], specifier = ">=2.58" },
 ]
 
 [[package]]
