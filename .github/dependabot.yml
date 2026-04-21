@@ -10,6 +10,9 @@ updates:
       time: "06:00"
       timezone: Asia/Tokyo
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     groups:
       python-minor-and-patch:
         update-types: ["minor", "patch"]
@@ -25,6 +28,9 @@ updates:
       time: "06:00"
       timezone: Asia/Tokyo
     open-pull-requests-limit: 5
+    cooldown:
+      default-days: 7
+      semver-major-days: 14
     groups:
       frontend-minor-and-patch:
         update-types: ["minor", "patch"]
@@ -40,6 +46,8 @@ updates:
       time: "06:00"
       timezone: Asia/Tokyo
     open-pull-requests-limit: 3
+    cooldown:
+      default-days: 7
 
   # GitHub Actions versions in .github/workflows/
   - package-ecosystem: "github-actions"
@@ -50,6 +58,9 @@ updates:
       time: "06:00"
       timezone: Asia/Tokyo
     open-pull-requests-limit: 5
+    # github-actions ecosystem does not accept semver-* cooldown fields.
+    cooldown:
+      default-days: 7
     groups:
       actions-minor-and-patch:
         update-types: ["minor", "patch"]

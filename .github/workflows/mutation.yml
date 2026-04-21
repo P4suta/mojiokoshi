@@ -7,13 +7,20 @@ concurrency:
   group: mutation-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   mutmut:
     name: Mutation Testing
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v8.0.0
         with:
@@ -54,11 +61,13 @@ jobs:
             SCORE=0
           fi
 
-          echo "killed=$KILLED" >> "$GITHUB_OUTPUT"
-          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
-          echo "survived=$SURVIVED" >> "$GITHUB_OUTPUT"
-          echo "timeout=$TIMEOUT" >> "$GITHUB_OUTPUT"
-          echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+          {
+            echo "killed=$KILLED"
+            echo "total=$TOTAL"
+            echo "survived=$SURVIVED"
+            echo "timeout=$TIMEOUT"
+            echo "score=$SCORE"
+          } >> "$GITHUB_OUTPUT"
 
           # List surviving mutant files
           SURVIVORS=$(echo "$RESULTS" | grep -E "^----|^Survived" || echo "None")
@@ -69,13 +78,14 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Write job summary
+        env:
+          SCORE: ${{ steps.results.outputs.score }}
+          KILLED: ${{ steps.results.outputs.killed }}
+          TOTAL: ${{ steps.results.outputs.total }}
+          SURVIVED: ${{ steps.results.outputs.survived }}
+          TIMEOUT: ${{ steps.results.outputs.timeout }}
+          SURVIVORS: ${{ steps.results.outputs.survivors }}
         run: |
-          SCORE="${{ steps.results.outputs.score }}"
-          KILLED="${{ steps.results.outputs.killed }}"
-          TOTAL="${{ steps.results.outputs.total }}"
-          SURVIVED="${{ steps.results.outputs.survived }}"
-          TIMEOUT="${{ steps.results.outputs.timeout }}"
-
           if [ "$SCORE" -ge 90 ]; then
             BADGE="🟢"
           elif [ "$SCORE" -ge 75 ]; then
@@ -99,7 +109,7 @@ jobs:
           <summary>Surviving mutants (click to expand)</summary>
 
           \`\`\`
-          ${{ steps.results.outputs.survivors }}
+          ${SURVIVORS}
           \`\`\`
 
           </details>

@@ -10,6 +10,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Default-deny at workflow level; individual jobs opt into specific perms.
 permissions:
   contents: read
 
@@ -19,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v8.0.0
         with:
@@ -34,6 +37,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v8.0.0
         with:
@@ -61,6 +66,8 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -83,25 +90,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: Dockerfile
           failure-threshold: warning
 
-  actions-lint:
-    name: Actions Lint (actionlint + zizmor)
+  actionlint:
+    name: Actions Lint (actionlint)
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: raven-actions/actionlint@v2.1.2
+
+  zizmor:
+    name: Actions Security Scan (zizmor)
+    runs-on: ubuntu-latest
+    # security-events: write is required by github/codeql-action/upload-sarif
+    # so zizmor findings land under the repo's Code Scanning alerts tab.
     permissions:
       contents: read
       security-events: write
     steps:
       - uses: actions/checkout@v6
-
-      - name: actionlint
-        uses: raven-actions/actionlint@v2.1.2
+        with:
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@v8.0.0
+
+      # Pre-seed with a valid, empty SARIF so upload-sarif always has a file
+      # to consume, even if zizmor crashes or produces no output.
+      - name: Seed empty SARIF
+        run: |
+          printf '%s\n' '{"version":"2.1.0","runs":[]}' > zizmor.sarif
 
       - name: zizmor (GitHub Actions security lint)
         run: uvx --from zizmor==1.24.1 zizmor --format sarif . > zizmor.sarif
