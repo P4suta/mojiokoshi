@@ -58,9 +58,9 @@ updates:
       time: "06:00"
       timezone: Asia/Tokyo
     open-pull-requests-limit: 5
+    # github-actions ecosystem does not accept semver-* cooldown fields.
     cooldown:
       default-days: 7
-      semver-major-days: 14
     groups:
       actions-minor-and-patch:
         update-types: ["minor", "patch"]
