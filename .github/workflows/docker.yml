@@ -33,11 +33,17 @@ concurrency:
   group: docker-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - uses: actions/checkout@v6
 
@@ -50,9 +56,26 @@ jobs:
         with:
           context: .
           push: false
+          load: true
           tags: mojiokoshi:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@v0.35.0
+        with:
+          image-ref: mojiokoshi:ci
+          format: sarif
+          output: trivy.sarif
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+
+      - name: Upload Trivy SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
 
       - name: Write job summary
         run: |
@@ -64,10 +87,11 @@ jobs:
           | Image | `mojiokoshi:ci` |
           | Status | Passed |
           | Digest | `${{ steps.build.outputs.digest }}` |
+          | Scan   | Trivy results uploaded to Security tab |
 
           ### Run locally
           ```bash
-          docker build -t mojiokoshi .
-          docker run --gpus all -p 8000:8000 mojiokoshi
+          docker compose build
+          docker compose up
           ```
           EOF

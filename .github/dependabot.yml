@@ -1,0 +1,57 @@
+version: 2
+
+updates:
+  # Python (uv) — uv.lock is consulted directly by Dependabot's uv ecosystem.
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-and-patch:
+        update-types: ["minor", "patch"]
+      python-major:
+        update-types: ["major"]
+
+  # SvelteKit / Bun (bun.lock)
+  - package-ecosystem: "bun"
+    directory: "/frontend"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-and-patch:
+        update-types: ["minor", "patch"]
+      frontend-major:
+        update-types: ["major"]
+
+  # Base images referenced by FROM / COPY --from=
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 3
+
+  # GitHub Actions versions in .github/workflows/
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Tokyo
+    open-pull-requests-limit: 5
+    groups:
+      actions-minor-and-patch:
+        update-types: ["minor", "patch"]
+      actions-major:
+        update-types: ["major"]
