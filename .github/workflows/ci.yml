@@ -89,8 +89,16 @@ jobs:
           dockerfile: Dockerfile
           failure-threshold: warning
 
-  actions-lint:
-    name: Actions Lint (actionlint + zizmor)
+  actionlint:
+    name: Actions Lint (actionlint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: raven-actions/actionlint@v2.1.2
+
+  zizmor:
+    name: Actions Security Scan (zizmor)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -98,10 +106,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: actionlint
-        uses: raven-actions/actionlint@v2.1.2
-
       - uses: astral-sh/setup-uv@v8.0.0
+
+      # Pre-seed with a valid, empty SARIF so upload-sarif always has a file
+      # to consume, even if zizmor crashes or produces no output.
+      - name: Seed empty SARIF
+        run: |
+          printf '%s\n' '{"version":"2.1.0","runs":[]}' > zizmor.sarif
 
       - name: zizmor (GitHub Actions security lint)
         run: uvx --from zizmor==1.24.1 zizmor --format sarif . > zizmor.sarif
