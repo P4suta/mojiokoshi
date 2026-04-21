@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import deal
 import pytest
@@ -10,6 +10,9 @@ import pytest
 from mojiokoshi.services.whisper import TranscriptionService
 
 from ..conftest import FakeWhisperModel
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestTranscriptionServiceContracts:

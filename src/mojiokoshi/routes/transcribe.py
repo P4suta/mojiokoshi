@@ -7,10 +7,9 @@ import logging
 import tempfile
 import time
 import uuid
-from collections.abc import Callable
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, HTTPException, UploadFile, WebSocket, WebSocketDisconnect
 from pydantic import ValidationError
@@ -23,6 +22,9 @@ from mojiokoshi.config import (
 )
 from mojiokoshi.models import Segment, UploadResponse, WsClientMessage, WsServerMessage
 from mojiokoshi.services.whisper import TranscriptionError, TranscriptionService
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -73,17 +75,17 @@ async def upload_audio(file: UploadFile) -> UploadResponse:
     file_id = str(uuid.uuid4())
 
     try:
-        tmp = tempfile.NamedTemporaryFile(suffix=ext, delete=False)
-        tmp.write(content)
-        tmp.close()
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+            tmp.write(content)
+            tmp_name = tmp.name
     except OSError as e:  # pragma: no cover
-        logger.error("Failed to write temp file: %s", e)
+        logger.exception("Failed to write temp file")
         raise HTTPException(
             status_code=500,
             detail="Failed to save uploaded file",
         ) from e
 
-    _store_file(file_id, tmp.name)
+    _store_file(file_id, tmp_name)
     logger.info("File uploaded: %s (%s, %d bytes)", file.filename, file_id, len(content))
 
     return UploadResponse(file_id=file_id, filename=file.filename)
@@ -93,18 +95,18 @@ async def _send_error(websocket: WebSocket, message: str) -> None:
     """Send an error message to the WebSocket client."""
     try:
         await websocket.send_json(WsServerMessage(type="error", message=message).model_dump())
-    except Exception:  # noqa: BLE001  # pragma: no cover
+    except Exception:  # pragma: no cover
         logger.debug("Failed to send error message to WebSocket client")
 
 
-def _create_ws_router(
+def _create_ws_router(  # noqa: PLR0915
     service_getter: Callable[[], TranscriptionService | None],
 ) -> APIRouter:
     """Create a WebSocket router bound to a service getter function."""
     ws_router = APIRouter(prefix="/api")
 
     @ws_router.websocket("/ws/transcribe")
-    async def websocket_transcribe(websocket: WebSocket) -> None:
+    async def websocket_transcribe(websocket: WebSocket) -> None:  # noqa: PLR0912, PLR0915
         await websocket.accept()
         logger.debug("WebSocket connection accepted")
 
@@ -156,7 +158,11 @@ def _create_ws_router(
 
                 try:
 
-                    def _run_transcription() -> tuple[float, list[dict[str, Any]]]:
+                    def _run_transcription(
+                        service: TranscriptionService = service,
+                        audio_path: str = audio_path,
+                        language: str = language,
+                    ) -> tuple[float, list[dict[str, Any]]]:
                         duration, seg_gen = service.transcribe_stream_with_info(
                             audio_path, language=language
                         )
@@ -209,18 +215,18 @@ def _create_ws_router(
                     )
 
                 except TimeoutError:  # pragma: no cover
-                    logger.error("Transcription timed out for file %s", file_id)
+                    logger.exception("Transcription timed out for file %s", file_id)
                     await _send_error(
                         websocket,
                         f"Transcription timed out after {TRANSCRIPTION_TIMEOUT_SECONDS}s",
                     )
 
                 except TranscriptionError as e:
-                    logger.error("Transcription error for %s: %s", file_id, e)
+                    logger.exception("Transcription error for %s", file_id)
                     await _send_error(websocket, str(e))
 
-                except OSError as e:  # pragma: no cover
-                    logger.error("I/O error during transcription of %s: %s", file_id, e)
+                except OSError:  # pragma: no cover
+                    logger.exception("I/O error during transcription of %s", file_id)
                     await _send_error(websocket, "File I/O error during transcription")
 
                 except Exception:  # pragma: no cover
@@ -232,7 +238,7 @@ def _create_ws_router(
                     removed_path = _pop_file(file_id)
                     if removed_path is not None:  # pragma: no branch
                         try:
-                            Path(removed_path).unlink(missing_ok=True)
+                            await asyncio.to_thread(Path(removed_path).unlink, missing_ok=True)
                         except OSError:  # pragma: no cover
                             logger.warning("Failed to delete temp file: %s", removed_path)
 

@@ -16,7 +16,7 @@ LANGUAGES: dict[str, str] = {
     "Korean": "ko",
     "Auto-detect": "auto",
 }
-VALID_LANGUAGE_CODES: set[str] = {v for v in LANGUAGES.values()}
+VALID_LANGUAGE_CODES: set[str] = set(LANGUAGES.values())
 DEFAULT_LANGUAGE: str = "ja"
 
 SUPPORTED_AUDIO_EXTENSIONS: set[str] = {
