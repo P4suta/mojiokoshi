@@ -1,0 +1,84 @@
+version: '3'
+
+# All tasks run through Docker. The repository convention is that neither
+# Python nor uv are installed on the host; every tool (ruff, pytest,
+# pyrefly, uv, mutmut) runs inside the compose `app` service.
+#
+# `task up` brings up the dev compose stack; most other tasks `exec` into it.
+
+vars:
+  COMPOSE: docker compose
+  EXEC: docker compose exec -T app
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  # ---------- Compose lifecycle ----------
+  up:
+    desc: Start dev stack (GPU passthrough, hot reload)
+    cmd: "{{.COMPOSE}} up"
+
+  up:detached:
+    desc: Start dev stack in the background
+    cmd: "{{.COMPOSE}} up -d"
+
+  down:
+    desc: Stop dev stack
+    cmd: "{{.COMPOSE}} down"
+
+  logs:
+    desc: Tail app logs
+    cmd: "{{.COMPOSE}} logs -f app"
+
+  shell:
+    desc: Drop into the app container
+    cmd: "{{.COMPOSE}} exec app bash"
+
+  # ---------- Build ----------
+  build:
+    desc: Build the dev image
+    cmd: "{{.COMPOSE}} build"
+
+  build:prod:
+    desc: Build the production image (no dev overrides)
+    cmd: docker build --tag mojiokoshi:latest .
+
+  # ---------- Quality ----------
+  lint:
+    desc: ruff + pyrefly (read-only)
+    cmds:
+      - "{{.EXEC}} ruff check src/ tests/"
+      - "{{.EXEC}} ruff format --check src/ tests/"
+      - "{{.EXEC}} pyrefly check"
+
+  fix:
+    desc: ruff --fix + ruff format (writes)
+    cmds:
+      - "{{.EXEC}} ruff check --fix src/ tests/"
+      - "{{.EXEC}} ruff format src/ tests/"
+
+  precommit:
+    desc: Run every pre-commit hook against every file
+    cmd: "{{.EXEC}} pre-commit run --all-files"
+
+  # ---------- Tests ----------
+  test:
+    desc: Fast test suite (no integration/slow marks)
+    cmd: '{{.EXEC}} pytest -m "not integration and not slow"'
+
+  test:all:
+    desc: Full test suite
+    cmd: "{{.EXEC}} pytest"
+
+  test:mut:
+    desc: Mutation testing via mutmut
+    cmd: "{{.EXEC}} mutmut run"
+
+  # ---------- Frontend ----------
+  fe:dev:
+    desc: SvelteKit dev server (runs on host via Bun)
+    dir: frontend
+    cmd: bun run dev
