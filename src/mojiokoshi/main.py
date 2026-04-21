@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import deal
 from fastapi import FastAPI, Request
@@ -14,7 +15,9 @@ from fastapi.staticfiles import StaticFiles
 from mojiokoshi.routes.health import router as health_router
 from mojiokoshi.routes.transcribe import _create_ws_router, router as upload_router
 from mojiokoshi.services.startup import StartupManager
-from mojiokoshi.services.whisper import TranscriptionService
+
+if TYPE_CHECKING:
+    from mojiokoshi.services.whisper import TranscriptionService
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ def create_app(
 
     @app.exception_handler(deal.PreContractError)
     async def handle_pre_contract_error(  # pragma: no cover
-        request: Request, exc: deal.PreContractError
+        _request: Request, exc: deal.PreContractError
     ) -> JSONResponse:
         logger.warning("Contract violation: %s", exc)
         return JSONResponse(

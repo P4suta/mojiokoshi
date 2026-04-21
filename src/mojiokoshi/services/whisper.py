@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Generator, Iterable
 from pathlib import Path
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import deal
 
 from mojiokoshi.models import Segment, TranscriptionResult
+
+if TYPE_CHECKING:
+    from collections.abc import Generator, Iterable
 
 logger = logging.getLogger(__name__)
 
@@ -53,15 +55,15 @@ class TranscriptionService:
                 audio_path, language=effective_language, beam_size=5
             )
         except RuntimeError as e:
-            logger.error("Model transcription failed for %s: %s", audio_path, e)
+            logger.exception("Model transcription failed for %s", audio_path)
             raise TranscriptionError(
                 f"Transcription engine error: {type(e).__name__}", cause=e
             ) from e
         except FileNotFoundError as e:
-            logger.error("Audio file not found: %s", audio_path)
+            logger.exception("Audio file not found: %s", audio_path)
             raise TranscriptionError("Audio file not found", cause=e) from e
         except Exception as e:
-            logger.error("Unexpected error during transcription of %s: %s", audio_path, e)
+            logger.exception("Unexpected error during transcription of %s", audio_path)
             raise TranscriptionError(
                 f"Unexpected transcription error: {type(e).__name__}", cause=e
             ) from e
@@ -104,15 +106,15 @@ class TranscriptionService:
                 audio_path, language=effective_language, beam_size=5
             )
         except RuntimeError as e:
-            logger.error("Model transcription failed for %s: %s", audio_path, e)
+            logger.exception("Model transcription failed for %s", audio_path)
             raise TranscriptionError(
                 f"Transcription engine error: {type(e).__name__}", cause=e
             ) from e
         except FileNotFoundError as e:
-            logger.error("Audio file not found: %s", audio_path)
+            logger.exception("Audio file not found: %s", audio_path)
             raise TranscriptionError("Audio file not found", cause=e) from e
         except Exception as e:
-            logger.error("Unexpected error during transcription of %s: %s", audio_path, e)
+            logger.exception("Unexpected error during transcription of %s", audio_path)
             raise TranscriptionError(
                 f"Unexpected transcription error: {type(e).__name__}", cause=e
             ) from e
@@ -140,15 +142,15 @@ class TranscriptionService:
                 audio_path, language=effective_language, beam_size=5
             )
         except RuntimeError as e:
-            logger.error("Model transcription failed for %s: %s", audio_path, e)
+            logger.exception("Model transcription failed for %s", audio_path)
             raise TranscriptionError(
                 f"Transcription engine error: {type(e).__name__}", cause=e
             ) from e
         except FileNotFoundError as e:
-            logger.error("Audio file not found: %s", audio_path)
+            logger.exception("Audio file not found: %s", audio_path)
             raise TranscriptionError("Audio file not found", cause=e) from e
         except Exception as e:
-            logger.error("Unexpected error during transcription of %s: %s", audio_path, e)
+            logger.exception("Unexpected error during transcription of %s", audio_path)
             raise TranscriptionError(
                 f"Unexpected transcription error: {type(e).__name__}", cause=e
             ) from e

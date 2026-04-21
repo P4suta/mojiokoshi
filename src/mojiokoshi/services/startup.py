@@ -90,7 +90,7 @@ class StartupManager:
                 self._state = StartupState.ERROR
                 self._message = f"Failed to load model: {type(e).__name__}"
                 self._error = str(e)
-            logger.error("Failed to load model %s: %s", model_name, e)
+            logger.exception("Failed to load model %s", model_name)
 
     def _download_model(self, model_name: str) -> str:  # pragma: no cover
         """Download model files. Returns local path."""

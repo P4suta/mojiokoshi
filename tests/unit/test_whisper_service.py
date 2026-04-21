@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import deal
 import pytest
@@ -11,6 +11,9 @@ from mojiokoshi.models import Segment, TranscriptionResult
 from mojiokoshi.services.whisper import TranscriptionError, TranscriptionService
 
 from ..conftest import FakeTranscriptionInfo, FakeWhisperModel
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class TestTranscriptionServiceInit:
@@ -247,7 +250,7 @@ class TestTranscriptionServiceStreamWithInfo:
         audio_file.write_bytes(b"data")
 
         service = TranscriptionService(model=fake_model)
-        duration, seg_gen = service.transcribe_stream_with_info(str(audio_file), language="auto")
+        _duration, seg_gen = service.transcribe_stream_with_info(str(audio_file), language="auto")
         list(seg_gen)
         assert fake_model.last_transcribe_kwargs["language"] is None
 
