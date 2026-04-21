@@ -33,92 +33,27 @@ jobs:
         run: uv run mutmut run || true
 
       - name: Collect results
-        id: results
-        run: |
-          RESULTS=$(uv run mutmut results 2>&1) || true
-          echo "$RESULTS" > mutmut-results.txt
-          echo "$RESULTS"
-
-          # mutmut 2.x format: "Survived 🙁 (N)" / "Timed out ⏰ (N)"
-          # Extract numbers from parentheses
-          SURVIVED=$(echo "$RESULTS" | grep -oP 'Survived.*?\(\K[0-9]+' || echo "0")
-          TIMEOUT=$(echo "$RESULTS" | grep -oP 'Timed out.*?\(\K[0-9]+' || echo "0")
-
-          # Count total mutants from the cache
-          TOTAL=$(uv run mutmut show count 2>/dev/null || echo "0")
-          if [ "$TOTAL" = "0" ] || [ -z "$TOTAL" ]; then
-            # Fallback: count all mutant IDs listed in results
-            TOTAL=$(echo "$RESULTS" | grep -oP '^\d+' | wc -l || echo "0")
-            TOTAL=$((TOTAL + 0))
-          fi
-
-          KILLED=$((TOTAL - SURVIVED - TIMEOUT))
-          if [ "$KILLED" -lt 0 ]; then KILLED=0; fi
-
-          if [ "$TOTAL" -gt 0 ]; then
-            SCORE=$(( (KILLED * 100) / TOTAL ))
-          else
-            SCORE=0
-          fi
-
-          {
-            echo "killed=$KILLED"
-            echo "total=$TOTAL"
-            echo "survived=$SURVIVED"
-            echo "timeout=$TIMEOUT"
-            echo "score=$SCORE"
-          } >> "$GITHUB_OUTPUT"
-
-          # List surviving mutant files
-          SURVIVORS=$(echo "$RESULTS" | grep -E "^----|^Survived" || echo "None")
-          {
-            echo "survivors<<GHEOF"
-            echo "$SURVIVORS"
-            echo "GHEOF"
-          } >> "$GITHUB_OUTPUT"
+        run: uv run mutmut results 2>&1 | tee mutmut-results.txt
 
       - name: Write job summary
-        env:
-          SCORE: ${{ steps.results.outputs.score }}
-          KILLED: ${{ steps.results.outputs.killed }}
-          TOTAL: ${{ steps.results.outputs.total }}
-          SURVIVED: ${{ steps.results.outputs.survived }}
-          TIMEOUT: ${{ steps.results.outputs.timeout }}
-          SURVIVORS: ${{ steps.results.outputs.survivors }}
         run: |
-          if [ "$SCORE" -ge 90 ]; then
-            BADGE="🟢"
-          elif [ "$SCORE" -ge 75 ]; then
-            BADGE="🟡"
-          else
-            BADGE="🔴"
-          fi
-
-          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
-          ## ${BADGE} Mutation Testing Results
-
-          | Metric | Value |
-          |--------|-------|
-          | Mutation score | **${SCORE}%** |
-          | Mutants killed | ${KILLED} |
-          | Mutants survived | ${SURVIVED} |
-          | Timed out | ${TIMEOUT} |
-          | Total mutants | ${TOTAL} |
-
-          <details>
-          <summary>Surviving mutants (click to expand)</summary>
-
-          \`\`\`
-          ${SURVIVORS}
-          \`\`\`
-
-          </details>
-          EOF
+          {
+            echo "## Mutation Testing Results"
+            echo
+            echo "Full results are available as the \`mutation-results\` artifact on this run."
+            echo
+            echo '```'
+            tail -200 mutmut-results.txt 2>/dev/null || echo "(no results)"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload raw results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: mutation-results
-          path: mutmut-results.txt
+          path: |
+            mutmut-results.txt
+            mutants/
           retention-days: 14
+          if-no-files-found: warn

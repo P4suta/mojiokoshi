@@ -130,7 +130,7 @@ jobs:
           printf '%s\n' '{"version":"2.1.0","runs":[]}' > zizmor.sarif
 
       - name: zizmor (GitHub Actions security lint)
-        run: uvx --from zizmor==1.24.1 zizmor --format sarif . > zizmor.sarif
+        run: uvx zizmor --format sarif . > zizmor.sarif
         continue-on-error: true
 
       - name: Upload zizmor SARIF
