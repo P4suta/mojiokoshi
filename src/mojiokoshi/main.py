@@ -6,12 +6,16 @@ import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import deal
-from fastapi import FastAPI, Request
+from asgi_correlation_id import CorrelationIdMiddleware
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from mojiokoshi.observability import (
+    configure_logging,
+    maybe_init_sentry,
+    register_exception_handlers,
+)
 from mojiokoshi.routes.health import router as health_router
 from mojiokoshi.routes.transcribe import _create_ws_router, router as upload_router
 from mojiokoshi.services.startup import StartupManager
@@ -32,6 +36,11 @@ def create_app(
     app = FastAPI(title="Mojiokoshi", version="0.1.0")
 
     app.add_middleware(
+        CorrelationIdMiddleware,
+        header_name="X-Request-ID",
+        update_request_header=True,
+    )
+    app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:5173"],
         allow_credentials=True,
@@ -39,15 +48,7 @@ def create_app(
         allow_headers=["*"],
     )
 
-    @app.exception_handler(deal.PreContractError)
-    async def handle_pre_contract_error(  # pragma: no cover
-        _request: Request, exc: deal.PreContractError
-    ) -> JSONResponse:
-        logger.warning("Contract violation: %s", exc)
-        return JSONResponse(
-            status_code=422,
-            content={"detail": f"Validation error: {exc}"},
-        )
+    register_exception_handlers(app)
 
     if startup_manager is not None:
         app.state.startup_manager = startup_manager
@@ -81,12 +82,12 @@ def cli() -> None:  # pragma: no cover
 
     import uvicorn
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
-
     from mojiokoshi.config import DEFAULT_MODEL, detect_device, get_compute_type
+    from mojiokoshi.settings import get_settings
+
+    settings = get_settings()
+    configure_logging(log_format=settings.log_format, log_level=settings.log_level)
+    maybe_init_sentry(settings)
 
     device = detect_device()
     compute_type = get_compute_type(device)
@@ -104,5 +105,6 @@ def cli() -> None:  # pragma: no cover
     )
     thread.start()
 
-    webbrowser.open("http://localhost:8000")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    if settings.open_browser:
+        webbrowser.open(f"http://localhost:{settings.port}")
+    uvicorn.run(app, host=settings.host, port=settings.port, log_config=None)
