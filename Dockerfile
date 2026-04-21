@@ -5,12 +5,12 @@
 #   2. uv              — pin the Astral uv binary for reproducibility
 #   3. runtime         — CUDA + Python + venv, non-root, healthcheck
 
-ARG UV_VERSION=0.11.7
+ARG UV_VERSION=latest
 ARG CUDA_IMAGE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
 ARG PYTHON_VERSION=3.12
 
 # ===== Stage 1: frontend build =====
-FROM oven/bun:1.2-alpine AS frontend-build
+FROM oven/bun:1.3-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/bun.lock ./
 RUN bun install --frozen-lockfile

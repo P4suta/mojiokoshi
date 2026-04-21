@@ -10,34 +10,24 @@ Local audio transcription tool with real-time progress display, powered by [fast
 - **Live segment display** as each part of the audio is transcribed
 - **Multi-language support** with Japanese, English, Chinese, Korean, and auto-detection
 - **Modern web UI** with dark/light theme, drag-and-drop upload, copy and download results
-- **One-command startup** with background model loading and status display
-- **Docker support** with GPU passthrough for zero-config deployment
+- **Structured logs and RFC 7807 error responses** for easier debugging and monitoring
+- **Docker-first workflow** with GPU passthrough for zero-config deployment
 
 ## Quick Start
 
-### Option 1: Docker (Recommended)
-
-Requires [Docker](https://docs.docker.com/get-docker/) and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
+Requires [Docker](https://docs.docker.com/get-docker/) and, for GPU acceleration, the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
 
 ```bash
-docker build -t mojiokoshi .
-docker run --gpus all -p 8000:8000 mojiokoshi
-```
-
-Open http://localhost:8000 in your browser.
-
-### Option 2: Local Installation
-
-Requires [Python 3.12+](https://www.python.org/downloads/) and [uv](https://docs.astral.sh/uv/getting-started/installation/).
-
-```bash
-git clone https://github.com/your-username/mojiokoshi.git
+git clone https://github.com/P4suta/mojiokoshi.git
 cd mojiokoshi
-uv sync
-uv run mojiokoshi
+docker compose up
 ```
 
-The server starts immediately and opens your browser. The model downloads in the background on first run (~3 GB for large-v3).
+Then open <http://localhost:8000> in your browser.
+
+The first run downloads the Whisper model (~3 GB for `large-v3`) into a persistent Docker volume, so subsequent starts are fast.
+
+> No host-side Python or Node install is needed — everything runs inside containers.
 
 ## How It Works
 
@@ -68,8 +58,6 @@ Maximum file size: **500 MB**
 
 ## Models
 
-The model is selected at server startup via `DEFAULT_MODEL` in `src/mojiokoshi/config.py`. Default: `large-v3`.
-
 | Model | Parameters | VRAM (float16) | Speed | Accuracy | Best For |
 |-------|-----------|----------------|-------|----------|----------|
 | `tiny` | 39M | ~1 GB | Fastest | Lower | Quick drafts, testing |
@@ -78,7 +66,7 @@ The model is selected at server startup via `DEFAULT_MODEL` in `src/mojiokoshi/c
 | `medium` | 769M | ~5 GB | Slower | High | Important content |
 | `large-v3` | 1.5B | ~6 GB | Slowest | Highest | Production (default) |
 
-If your GPU doesn't have enough VRAM, the app will show an error. Switch to a smaller model or use CPU mode.
+If your GPU doesn't have enough VRAM, either switch to a smaller model or let the app fall back to CPU (slower, but no VRAM limit).
 
 ## Languages
 
@@ -90,61 +78,67 @@ If your GPU doesn't have enough VRAM, the app will show an error. Switch to a sm
 | Korean | `ko` |
 | Auto-detect | `auto` |
 
-Auto-detect works well for most audio but specifying the language gives better results.
-
-## Development Setup
-
-### Prerequisites
-
-- [Python 3.12+](https://www.python.org/downloads/)
-- [uv](https://docs.astral.sh/uv/) (Python package manager)
-- [Bun](https://bun.sh/) (frontend package manager)
-- NVIDIA GPU with CUDA 12+ (optional, falls back to CPU)
-
-### Running in Development Mode
-
-```bash
-# Terminal 1: Backend (auto-reloads on changes)
-uv sync --dev
-uv run uvicorn mojiokoshi.main:app --reload --port 8000
-
-# Terminal 2: Frontend (hot module replacement)
-cd frontend
-bun install
-bun run dev
-```
-
-Open http://localhost:5173 (frontend dev server proxies API calls to the backend).
-
-### Running Tests
-
-```bash
-# All tests with coverage
-uv run pytest
-
-# Quick test run without coverage
-uv run pytest --no-cov
-
-# Only unit tests
-uv run pytest tests/unit/
-
-# Property-based tests
-uv run pytest tests/property/
-```
-
-Tests require 100% branch coverage to pass.
+Auto-detect works well for most audio, but specifying the language usually yields better results.
 
 ## Configuration
 
-| Setting | Default | Location |
-|---------|---------|----------|
-| Default model | `large-v3` | `src/mojiokoshi/config.py` |
-| Default language | `ja` | `src/mojiokoshi/config.py` |
-| Max upload size | 500 MB | `src/mojiokoshi/config.py` |
-| Transcription timeout | 30 minutes | `src/mojiokoshi/config.py` |
-| Server port | 8000 | `src/mojiokoshi/main.py` |
+All runtime behavior is controlled via `MOJIOKOSHI_*` environment variables (or a local `.env` file). Commonly-tweaked values:
 
-To change defaults, edit `src/mojiokoshi/config.py` and restart the server.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MOJIOKOSHI_LOG_FORMAT` | `console` | `json` for structured/prod-style logs, `console` for dev |
+| `MOJIOKOSHI_LOG_LEVEL` | `INFO` | `DEBUG` / `INFO` / `WARNING` / `ERROR` / `CRITICAL` |
+| `MOJIOKOSHI_PORT` | `8000` | Web UI / API port |
+| `MOJIOKOSHI_DEFAULT_MODEL` | `large-v3` | Any Whisper model name |
+| `MOJIOKOSHI_OPEN_BROWSER` | `true` | Whether to auto-open a browser tab on startup |
+| `MOJIOKOSHI_SENTRY_DSN` | *(unset)* | Enables Sentry error reporting when set (requires the `observability` extra) |
+
+Larger fixed values (supported formats, upload size cap, transcription timeout) live in `src/mojiokoshi/config.py`.
+
+## Development
+
+The project is Docker-first: all tooling (Python, uv, ruff, pytest, pyrefly) runs inside the container, so you don't need to install anything on the host besides Docker.
+
+### Option A — VS Code Dev Containers
+
+1. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers).
+2. Open the repo and run **"Dev Containers: Reopen in Container"**.
+3. VS Code drops you into `/app` with the venv already synced and pre-commit hooks installed.
+
+### Option B — Taskfile on the host
+
+With [Task](https://taskfile.dev/installation/) installed, all common dev commands are one-liners:
+
+```bash
+task up             # Start the dev stack (GPU + hot reload)
+task shell          # Shell into the app container
+task lint           # ruff + pyrefly (read-only)
+task fix            # ruff --fix + ruff format (writes)
+task test           # Fast test suite
+task test:all       # Full suite including integration/slow marks
+task precommit      # Run all pre-commit hooks
+task down           # Stop the dev stack
+```
+
+### Running Tests
+
+Tests are enforced at 100% branch coverage.
+
+```bash
+task test           # Fast suite
+task test:all       # Include integration + slow tests
+```
+
+### Linting and Formatting
+
+Ruff (strict ruleset) and pyrefly run on every PR. Locally:
+
+```bash
+task lint           # Check only
+task fix            # Auto-fix + format
+```
+
+Pre-commit hooks (ruff, gitleaks, hadolint, zizmor, standard hygiene) are installed automatically in the Dev Container; outside of it, run `pre-commit install` once.
 
 ## Troubleshooting
 
@@ -156,25 +150,25 @@ The model loads in the background after server startup. For `large-v3`, the firs
 
 - Ensure NVIDIA drivers are installed: `nvidia-smi`
 - Check that CUDA 12+ is available
-- For Docker, install [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) and use `--gpus all`
-- CPU mode works but is significantly slower (5-10x)
+- For Docker, install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+- CPU mode works but is significantly slower (5–10×)
 
 ### Out of memory (OOM) error
 
 Your GPU doesn't have enough VRAM for the selected model. Options:
-- Switch to a smaller model (e.g., `small` or `medium`) in `config.py`
+- Switch to a smaller model by setting `MOJIOKOSHI_DEFAULT_MODEL=small`
 - Close other GPU-intensive applications
 - Use CPU mode (slower but no VRAM limit)
 
 ### Transcription is slow
 
-- **GPU recommended**: CPU transcription is 5-10x slower than GPU
-- **Model size matters**: `tiny` is ~20x faster than `large-v3`
-- **Long audio files**: A 1-hour file with `large-v3` on GPU takes ~2-5 minutes
+- **GPU recommended**: CPU transcription is 5–10× slower than GPU
+- **Model size matters**: `tiny` is ~20× faster than `large-v3`
+- **Long audio files**: A 1-hour file with `large-v3` on GPU takes ~2–5 minutes
 
 ### "Processing is taking longer than expected"
 
-This warning appears if no new segments arrive for 30 seconds. It usually means the model is working on a difficult section (background noise, multiple speakers, etc.). Wait a bit longer or cancel and try with a smaller model.
+This warning appears if no new segments arrive for 30 seconds. It usually means the model is working on a difficult section (background noise, multiple speakers, etc.). Wait a bit longer, or cancel and retry with a smaller model.
 
 ### File upload fails
 
@@ -184,17 +178,17 @@ This warning appears if no new segments arrive for 30 seconds. It usually means 
 
 ### Docker build fails
 
-- Ensure Docker has access to the internet for downloading dependencies
+- Ensure Docker has network access for pulling dependencies
 - The build requires ~10 GB of disk space (CUDA base image + model)
 - On Windows, ensure WSL2 is configured for Docker
 
 ## Tech Stack
 
-- **Backend**: Python 3.12, FastAPI, faster-whisper, uvicorn
+- **Backend**: Python 3.12, FastAPI, faster-whisper, uvicorn, structlog, pydantic-settings
 - **Frontend**: Svelte 5, SvelteKit, Tailwind CSS 4, Vite 8
 - **Transcription**: faster-whisper (CTranslate2-based Whisper implementation)
-- **Package Managers**: uv (Python), Bun (JavaScript)
-- **Container**: Docker with NVIDIA CUDA 12.6.3
+- **Package managers**: uv (Python), Bun (JavaScript)
+- **Container**: Docker multi-stage build on NVIDIA CUDA 12.6.3
 
 ## License
 
