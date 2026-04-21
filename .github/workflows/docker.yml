@@ -33,6 +33,7 @@ concurrency:
   group: docker-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+# Default-deny at workflow level; jobs that need more opt in explicitly.
 permissions:
   contents: read
 
@@ -41,11 +42,15 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # security-events: write is required by github/codeql-action/upload-sarif
+    # so Trivy findings land under the repo's Code Scanning alerts tab.
     permissions:
       contents: read
       security-events: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
@@ -78,20 +83,22 @@ jobs:
           category: trivy
 
       - name: Write job summary
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
         run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
           ## Docker Build Results
 
           | Item | Value |
           |------|-------|
-          | Image | `mojiokoshi:ci` |
+          | Image | \`mojiokoshi:ci\` |
           | Status | Passed |
-          | Digest | `${{ steps.build.outputs.digest }}` |
+          | Digest | \`${DIGEST}\` |
           | Scan   | Trivy results uploaded to Security tab |
 
           ### Run locally
-          ```bash
+          \`\`\`bash
           docker compose build
           docker compose up
-          ```
+          \`\`\`
           EOF

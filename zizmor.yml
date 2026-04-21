@@ -1,0 +1,23 @@
+# zizmor configuration for this repository.
+#
+# Docs: https://docs.zizmor.sh/configuration/
+#
+# Policy: we use `ref-pin` (tag- or SHA-pinned `uses:` references are OK) for
+# all well-known first-party and widely-used action publishers, and `hash-pin`
+# for the long tail. Dependabot watches .github/workflows/ so tag bumps come
+# in automatically; SHA-pinning everything would just add churn without
+# material security benefit for an MIT-licensed hobby repo.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        actions/*: ref-pin
+        github/*: ref-pin
+        astral-sh/*: ref-pin
+        docker/*: ref-pin
+        oven-sh/*: ref-pin
+        hadolint/*: ref-pin
+        aquasecurity/*: ref-pin
+        raven-actions/*: ref-pin
+        zizmorcore/*: ref-pin
+        "*": hash-pin
