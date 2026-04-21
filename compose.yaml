@@ -1,0 +1,36 @@
+name: mojiokoshi
+
+services:
+  app:
+    build:
+      context: .
+      # Same image used for dev (hot reload) and prod. The `target` is
+      # pinned so compose.override.yaml and a `docker compose build`
+      # without override pick up the same stage.
+      target: runtime
+      cache_from:
+        - type=gha
+    image: mojiokoshi:local
+    ports:
+      - "8000:8000"
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      MOJIOKOSHI_LOG_FORMAT: json
+      MOJIOKOSHI_LOG_LEVEL: INFO
+      MOJIOKOSHI_OPEN_BROWSER: "false"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    healthcheck:
+      test:
+        ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped

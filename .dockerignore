@@ -1,14 +1,53 @@
-.venv/
+# Git / editor / OS
 .git/
+.gitignore
+.gitattributes
 .idea/
-.pytest_cache/
-.ruff_cache/
-htmlcov/
+.vscode/
+.devcontainer/
+*.swp
+.DS_Store
+
+# Python build artifacts
+.venv/
 __pycache__/
 *.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.ruff_cache/
+.pytest_cache/
+.mutmut-cache/
+.hypothesis/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Node / SvelteKit build artifacts (the runtime image copies the prebuilt
+# output from the frontend-build stage; we don't want host-built copies
+# shadowing that).
 node_modules/
 frontend/node_modules/
 frontend/.svelte-kit/
 frontend/build/
+
+# Local secrets / env
 .env
-*.egg-info/
+.env.*
+!.env.example
+
+# CI / dev orchestration (not needed inside the production image)
+.github/
+compose.yaml
+compose.override.yaml
+compose.*.yaml
+Taskfile.yml
+.pre-commit-config.yaml
+.editorconfig
+
+# Docs / notes
+*.md
+!README.md
+docs/

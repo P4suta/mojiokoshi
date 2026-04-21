@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/devcontainers/spec/main/schemas/devContainer.schema.json",
+  "name": "mojiokoshi",
+  "dockerComposeFile": ["../compose.yaml", "../compose.override.yaml"],
+  "service": "app",
+  "workspaceFolder": "/app",
+  "runServices": ["app"],
+  "shutdownAction": "stopCompose",
+
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "charliermarsh.ruff",
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "svelte.svelte-vscode",
+        "bradlc.vscode-tailwindcss",
+        "github.vscode-github-actions",
+        "task.vscode-task",
+        "editorconfig.editorconfig"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/venv/bin/python",
+        "python.testing.pytestEnabled": true,
+        "python.testing.unittestEnabled": false,
+        "editor.formatOnSave": true,
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
+        },
+        "files.watcherExclude": {
+          "**/.venv/**": true,
+          "**/node_modules/**": true,
+          "**/.ruff_cache/**": true,
+          "**/htmlcov/**": true
+        }
+      }
+    }
+  },
+
+  "postCreateCommand": "uv sync && pre-commit install || true",
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "mojiokoshi (FastAPI)",
+      "onAutoForward": "notify"
+    }
+  },
+  "remoteUser": "root"
+}

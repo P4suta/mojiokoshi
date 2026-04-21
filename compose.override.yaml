@@ -1,0 +1,45 @@
+# Dev-only overrides, auto-merged by `docker compose up`.
+#
+# Differences from the base compose.yaml:
+#   * source is bind-mounted for hot reload
+#   * uvicorn runs with --reload
+#   * log pipeline is human-readable (console)
+#   * uv cache and HuggingFace model cache are persisted across runs
+#   * dev deps are installed (for ruff/pytest via `task lint` / `task test`)
+#   * container runs as root so bind-mounted writes land with host-safe
+#     perms; the production deploy continues to use the non-root `app` user
+#     from the Dockerfile.
+
+services:
+  app:
+    command:
+      [
+        "uvicorn",
+        "mojiokoshi.main:create_app",
+        "--factory",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+        "--log-config",
+        "/dev/null",
+      ]
+    environment:
+      MOJIOKOSHI_LOG_FORMAT: console
+      MOJIOKOSHI_LOG_LEVEL: DEBUG
+      UV_NO_DEV: "0"
+    user: "0:0"
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests
+      - ./pyproject.toml:/app/pyproject.toml
+      - ./uv.lock:/app/uv.lock
+      - uv-cache:/root/.cache/uv
+      - hf-cache:/root/.cache/huggingface
+      - pre-commit-cache:/root/.cache/pre-commit
+
+volumes:
+  uv-cache:
+  hf-cache:
+  pre-commit-cache:
