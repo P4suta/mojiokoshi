@@ -10,7 +10,7 @@ ARG CUDA_IMAGE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
 ARG PYTHON_VERSION=3.12
 
 # ===== Stage 1: frontend build =====
-FROM oven/bun:1.2-alpine AS frontend-build
+FROM oven/bun:1.3-alpine AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/bun.lock ./
 RUN bun install --frozen-lockfile
