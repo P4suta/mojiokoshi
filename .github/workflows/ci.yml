@@ -23,7 +23,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v8.0.0
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
 
@@ -40,7 +40,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v8.0.0
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
 
@@ -121,7 +121,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v8.0.0
+      - uses: astral-sh/setup-uv@v8.1.0
 
       # Pre-seed with a valid, empty SARIF so upload-sarif always has a file
       # to consume, even if zizmor crashes or produces no output.
@@ -135,7 +135,7 @@ jobs:
 
       - name: Upload zizmor SARIF
         if: always()
-        uses: github/codeql-action/upload-sarif@v4.35.1
+        uses: github/codeql-action/upload-sarif@v4.35.2
         with:
           sarif_file: zizmor.sarif
           category: zizmor
