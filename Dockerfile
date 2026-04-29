@@ -5,8 +5,11 @@
 #   2. uv              — pin the Astral uv binary for reproducibility
 #   3. runtime         — CUDA + Python + venv, non-root, healthcheck
 
-ARG UV_VERSION=latest
-ARG CUDA_IMAGE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
+# Pin uv (not `latest`) so a Trivy hit on a bundled rust crate ties to a
+# specific upstream release we can bump deliberately. CUDA stays in the 12.x
+# line because CTranslate2 / faster-whisper 1.2 don't yet support CUDA 13.
+ARG UV_VERSION=0.11.8
+ARG CUDA_IMAGE=nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04
 ARG PYTHON_VERSION=3.12
 
 # ===== Stage 1: frontend build =====
@@ -40,12 +43,20 @@ ENV DEBIAN_FRONTEND=noninteractive \
     NVIDIA_VISIBLE_DEVICES=all \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# hadolint ignore=DL3008
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# `apt-get upgrade` is intentional here: NVIDIA's CUDA images are rebuilt
+# infrequently, so the Ubuntu 24.04 archive nearly always ships patched
+# versions of glibc/openssl/gnupg/pam/etc. that the base image hasn't picked
+# up yet. Pulling those patches at build time is what closes the bulk of the
+# Trivy CVE backlog. DL3005 (no apt-get upgrade) is suppressed for that reason.
+# hadolint ignore=DL3005,DL3008
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
         python${PYTHON_VERSION} \
         python${PYTHON_VERSION}-venv \
         ca-certificates \
         curl \
+    && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=uv /uv /uvx /usr/local/bin/

@@ -188,7 +188,7 @@ This warning appears if no new segments arrive for 30 seconds. It usually means 
 - **Frontend**: Svelte 5, SvelteKit, Tailwind CSS 4, Vite 8
 - **Transcription**: faster-whisper (CTranslate2-based Whisper implementation)
 - **Package managers**: uv (Python), Bun (JavaScript)
-- **Container**: Docker multi-stage build on NVIDIA CUDA 12.6.3
+- **Container**: Docker multi-stage build on NVIDIA CUDA 12.9.1
 
 ## License
 

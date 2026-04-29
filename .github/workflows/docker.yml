@@ -67,7 +67,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Trivy vulnerability scan
-        uses: aquasecurity/trivy-action@v0.35.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           # Track the latest Trivy scanner release rather than pinning to a
           # specific one; the action itself is already ref-pinned.
@@ -75,7 +75,14 @@ jobs:
           image-ref: mojiokoshi:ci
           format: sarif
           output: trivy.sarif
-          severity: CRITICAL,HIGH
+          # Surface every severity. Silently dropping MEDIUM/LOW masks the
+          # long-tail OS-package drift that `apt-get upgrade` in the Dockerfile
+          # is meant to clean up, and hides upstream-bundled crate findings
+          # that we want visible on the dashboard until the upstream package
+          # (typically `uv`) is bumped via Dependabot.
+          # `ignore-unfixed` stays on because a CVE with no fix anywhere is
+          # not actionable from this repo — that's "no patch exists yet",
+          # not "we chose to suppress it".
           ignore-unfixed: true
 
       - name: Upload Trivy SARIF
