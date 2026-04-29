@@ -3,7 +3,15 @@
 # Multi-stage build:
 #   1. frontend-build  — SvelteKit static build via Bun
 #   2. uv              — pin the Astral uv binary for reproducibility
-#   3. runtime         — CUDA + Python + venv, non-root, healthcheck
+#   3. runtime         — CUDA + Python + venv, non-root, healthcheck.
+#                        DOES NOT ship the uv binary — uv is a build tool
+#                        used to populate /opt/venv, never executed at
+#                        runtime. Removing it shrinks the trust surface
+#                        (one fewer statically-linked rust binary for Trivy
+#                        to scan against bundled-crate CVEs).
+#   4. dev             — `runtime` + uv re-installed, for devcontainer /
+#                        compose.override.yaml hot-reload workflows where
+#                        `uv sync`, `uv run`, etc. are part of the loop.
 
 # Pin uv (not `latest`) so a Trivy hit on a bundled rust crate ties to a
 # specific upstream release we can bump deliberately. CUDA stays in the 12.x
@@ -59,6 +67,9 @@ RUN apt-get update \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
+# uv is mounted into /usr/local/bin only for the build steps below; it is
+# removed before the runtime stage finalizes (see the rm at the end of this
+# stage). The `dev` stage re-adds it for interactive workflows.
 COPY --from=uv /uv /uvx /usr/local/bin/
 
 # Non-root runtime user.
@@ -86,6 +97,13 @@ RUN --mount=type=cache,target=/root/.cache/uv,sharing=locked \
 # --- Frontend assets.
 COPY --from=frontend-build --chown=app:app /app/frontend/build frontend/build/
 
+# Drop the build-only uv binary so Trivy doesn't keep flagging the rust
+# crates statically linked into it (rand / rustls-webpki / etc.) when those
+# advisories don't actually affect production code paths — uv is never
+# invoked at runtime. The `dev` stage below copies it back for interactive
+# use in the devcontainer.
+RUN rm -f /usr/local/bin/uv /usr/local/bin/uvx
+
 USER app
 
 EXPOSE 8000
@@ -95,3 +113,15 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
 
 # venv is on PATH, so the console_script runs directly without `uv run`.
 CMD ["mojiokoshi"]
+
+# ===== Stage 4: dev (runtime + uv) =====
+# Selected by compose.override.yaml / .devcontainer; not used for prod.
+# We re-add the uv binary here so that:
+#   * `uv sync` works inside the devcontainer postCreateCommand
+#   * compose.override.yaml's `UV_NO_DEV=0` actually has something to act on
+#   * `task lint` / `task test` (which shell out to `uv run …`) work
+# The Trivy alerts on this image are accepted: dev images are not deployed.
+FROM runtime AS dev
+USER root
+COPY --from=uv /uv /uvx /usr/local/bin/
+USER app
