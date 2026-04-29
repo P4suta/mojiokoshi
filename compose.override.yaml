@@ -12,6 +12,11 @@
 
 services:
   app:
+    build:
+      # Override the base `runtime` target — the dev workflow needs the uv
+      # binary back (for `uv sync`, `uv run`, the devcontainer
+      # postCreateCommand, etc.). The `dev` stage is `runtime` + uv.
+      target: dev
     command:
       [
         "uvicorn",
