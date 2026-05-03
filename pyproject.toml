@@ -5,7 +5,7 @@ description = "Audio transcription tool powered by faster-whisper"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.136",
-    "uvicorn[standard]>=0.45",
+    "uvicorn[standard]>=0.46.0",
     "faster-whisper>=1.2.1",
     "python-multipart>=0.0.26",
     "deal>=4.24.6",
