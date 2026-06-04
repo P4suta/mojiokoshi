@@ -62,6 +62,12 @@ jobs:
           context: .
           push: false
           load: true
+          # Pin the production target. Without this, build-push-action picks
+          # the *last* `FROM ... AS <name>` in the Dockerfile, which is the
+          # `dev` stage (= runtime + uv re-installed for the devcontainer).
+          # Trivy would then keep finding rust-crate CVEs bundled in the
+          # uv binary that the production image deliberately doesn't ship.
+          target: runtime
           tags: mojiokoshi:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
