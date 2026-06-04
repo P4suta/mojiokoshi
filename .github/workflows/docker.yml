@@ -68,6 +68,9 @@ jobs:
           # Trivy would then keep finding rust-crate CVEs bundled in the
           # uv binary that the production image deliberately doesn't ship.
           target: runtime
+          # Stamp the OCI image labels with the commit under test.
+          build-args: |
+            VCS_REF=${{ github.sha }}
           tags: mojiokoshi:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max

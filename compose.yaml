@@ -27,8 +27,14 @@ services:
               count: all
               capabilities: [gpu]
     healthcheck:
+      # Probe the real API path (/api/health) with the venv's Python — there is
+      # no curl in the image. urlopen raises on any non-2xx or refused socket,
+      # so a wrong path or a down server is reported unhealthy.
       test:
-        ["CMD", "curl", "--fail", "--silent", "http://localhost:8000/health"]
+        - CMD
+        - /opt/venv/bin/python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).status == 200 else 1)"
       interval: 30s
       timeout: 5s
       retries: 3

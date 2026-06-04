@@ -22,12 +22,18 @@
 # Pin uv (not `latest`) so a Trivy hit on a bundled rust crate ties to a
 # specific upstream release we can bump deliberately. CUDA stays in the 12.x
 # line because CTranslate2 / faster-whisper 1.2 don't yet support CUDA 13.
+#
+# Every base image is pinned by digest (the human-readable tag is kept alongside
+# for context) so builds are reproducible and tamper-evident. When bumping a
+# tag, refresh its digest too — a tag/digest mismatch fails the pull, which is
+# the intended guard. Resolve a new digest with:
+#   docker buildx imagetools inspect <image:tag> --format '{{.Manifest.Digest}}'
 ARG UV_VERSION=0.11.8
-ARG CUDA_IMAGE=nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04
+ARG CUDA_IMAGE=nvidia/cuda:12.9.1-cudnn-runtime-ubuntu24.04@sha256:d02c4310b6d57ca0b16cd80298bdb33a74187baafe2eccd8a6a16180ddc90802
 ARG PYTHON_VERSION=3.12
 
 # ===== Stage 1: frontend build =====
-FROM oven/bun:1.3-alpine AS frontend-build
+FROM oven/bun:1.3.14-alpine@sha256:5acc90a93e91ff07bf72aa90a7c9f0fa189765aec90b47bdbf2152d2196383c0 AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/bun.lock ./
 RUN bun install --frozen-lockfile
@@ -35,7 +41,7 @@ COPY frontend/ .
 RUN bun run build
 
 # ===== Stage 2: pinned uv binary =====
-FROM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv
+FROM ghcr.io/astral-sh/uv:${UV_VERSION}@sha256:3b7b60a81d3c57ef471703e5c83fd4aaa33abcd403596fb22ab07db85ae91347 AS uv
 
 # ===== Stage 3: builder — populate /opt/venv with uv =====
 # This stage is intentionally not the final image. Only /opt/venv (and the
@@ -95,14 +101,26 @@ ENV DEBIAN_FRONTEND=noninteractive \
     NVIDIA_VISIBLE_DEVICES=all \
     NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
+# OCI image metadata. VCS_REF / VERSION are injected by CI (git sha + project
+# version); they keep dev-friendly defaults for a bare `docker build` / compose.
+ARG VCS_REF=dev
+ARG VERSION=0.1.0
+LABEL org.opencontainers.image.title="mojiokoshi" \
+      org.opencontainers.image.description="Audio transcription tool powered by faster-whisper" \
+      org.opencontainers.image.source="https://github.com/P4suta/mojiokoshi" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.version="${VERSION}"
+
 # `apt-get upgrade` is intentional here: NVIDIA's CUDA images are rebuilt
 # infrequently, so the Ubuntu 24.04 archive nearly always ships patched
 # versions of glibc/openssl/gnupg/pam/etc. that the base image hasn't picked
 # up yet. Pulling those patches at build time is what closes the bulk of the
 # Trivy CVE backlog. DL3005 (no apt-get upgrade) is suppressed for that reason.
 # We need the same python${PYTHON_VERSION}-venv as the builder so the venv's
-# python symlink resolves; ca-certificates and curl are needed at runtime
-# (TLS for the API + curl for the HEALTHCHECK).
+# python symlink resolves; ca-certificates provides the TLS roots the API needs.
+# The HEALTHCHECK probes the API with the venv's own Python (urllib, stdlib), so
+# no curl — and no extra CVE surface — is pulled in just to hit a local URL.
 # hadolint ignore=DL3005,DL3008
 RUN apt-get update \
     && apt-get upgrade -y \
@@ -110,7 +128,6 @@ RUN apt-get update \
         python${PYTHON_VERSION} \
         python${PYTHON_VERSION}-venv \
         ca-certificates \
-        curl \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 
@@ -134,8 +151,11 @@ USER app
 
 EXPOSE 8000
 
+# Probe the real API path (the health router is mounted under /api). urlopen
+# raises on any non-2xx (e.g. 404) or refused connection, so a bad path or a
+# down server reports unhealthy. Uses the venv Python on PATH — no curl needed.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD curl --fail --silent --show-error http://localhost:8000/health || exit 1
+    CMD ["/opt/venv/bin/python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).status == 200 else 1)"]
 
 # venv is on PATH, so the console_script runs directly without `uv run`.
 CMD ["mojiokoshi"]
