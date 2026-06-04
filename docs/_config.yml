@@ -1,0 +1,7 @@
+# GitHub Pages (deploy from branch: main /docs) — Jekyll + Cayman theme.
+title: Mojiokoshi
+description: >-
+  Local, GPU-accelerated audio transcription with real-time progress —
+  powered by faster-whisper and NVIDIA CUDA.
+theme: jekyll-theme-cayman
+show_downloads: false
