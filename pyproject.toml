@@ -17,7 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 observability = [
-    "sentry-sdk[fastapi]>=2.58",
+    "sentry-sdk[fastapi]>=2.61.0",
 ]
 
 [project.scripts]
@@ -42,7 +42,7 @@ dev = [
     "ruff>=0.15.14",
     "pyrefly>=0.62",
     "pre-commit>=4.6.0",
-    "sentry-sdk[fastapi]>=2.58",
+    "sentry-sdk[fastapi]>=2.61.0",
 ]
 
 [tool.pytest.ini_options]
