@@ -11,7 +11,7 @@ dependencies = [
     "deal>=4.24.6",
     "structlog>=25.5",
     "rich>=15.0",
-    "asgi-correlation-id>=4.3",
+    "asgi-correlation-id>=5.0.0",
     "pydantic-settings>=2.14.1",
 ]
 
@@ -40,7 +40,7 @@ dev = [
     "httpx>=0.28.1",
     "polyfactory>=3.3",
     "ruff>=0.15.14",
-    "pyrefly>=0.62",
+    "pyrefly>=1.0.0",
     "pre-commit>=4.6.0",
     "sentry-sdk[fastapi]>=2.58",
 ]
