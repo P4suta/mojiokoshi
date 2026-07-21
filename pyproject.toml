@@ -12,7 +12,7 @@ dependencies = [
     "structlog>=25.5",
     "rich>=15.0",
     "asgi-correlation-id>=4.3",
-    "pydantic-settings>=2.14.1",
+    "pydantic-settings>=2.14.2",
 ]
 
 [project.optional-dependencies]
