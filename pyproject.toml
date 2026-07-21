@@ -9,9 +9,9 @@ dependencies = [
     "faster-whisper>=1.2.1",
     "python-multipart>=0.0.29",
     "deal>=4.24.6",
-    "structlog>=25.5",
+    "structlog>=26.1.0",
     "rich>=15.0",
-    "asgi-correlation-id>=4.3",
+    "asgi-correlation-id>=5.0.1",
     "pydantic-settings>=2.14.2",
 ]
 
@@ -40,7 +40,7 @@ dev = [
     "httpx>=0.28.1",
     "polyfactory>=3.3",
     "ruff>=0.15.14",
-    "pyrefly>=0.62",
+    "pyrefly>=1.1.1",
     "pre-commit>=4.6.0",
     "sentry-sdk[fastapi]>=2.61.0",
 ]
