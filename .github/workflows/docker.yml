@@ -92,7 +92,7 @@ jobs:
           # long-tail OS-package drift that `apt-get upgrade` in the Dockerfile
           # is meant to clean up, and hides upstream-bundled crate findings
           # that we want visible on the dashboard until the upstream package
-          # (typically `uv`) is bumped via Dependabot.
+          # (typically `uv`) is bumped via Renovate.
           # `ignore-unfixed` stays on because a CVE with no fix anywhere is
           # not actionable from this repo — that's "no patch exists yet",
           # not "we chose to suppress it".
