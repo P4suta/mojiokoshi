@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { appState } from '$lib/state.svelte';
+	import { appState } from '#lib/state.svelte.js';
 
 	let copied = $state(false);
 

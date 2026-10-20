@@ -1,19 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { appState } from '$lib/state.svelte';
+	import { appState } from '#lib/state.svelte.js';
 	import {
 		fetchConfig,
 		uploadFile,
 		startTranscription,
 		cancelTranscription,
 		pollUntilReady
-	} from '$lib/api';
-	import FileUpload from '$lib/components/FileUpload.svelte';
-	import ModelSelector from '$lib/components/ModelSelector.svelte';
-	import LanguageSelector from '$lib/components/LanguageSelector.svelte';
-	import ProgressBar from '$lib/components/ProgressBar.svelte';
-	import TranscriptionResult from '$lib/components/TranscriptionResult.svelte';
-	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
+	} from '#lib/api.js';
+	import FileUpload from '#lib/components/FileUpload.svelte';
+	import ModelSelector from '#lib/components/ModelSelector.svelte';
+	import LanguageSelector from '#lib/components/LanguageSelector.svelte';
+	import ProgressBar from '#lib/components/ProgressBar.svelte';
+	import TranscriptionResult from '#lib/components/TranscriptionResult.svelte';
+	import ThemeToggle from '#lib/components/ThemeToggle.svelte';
 
 	let ws: WebSocket | null = $state(null);
 

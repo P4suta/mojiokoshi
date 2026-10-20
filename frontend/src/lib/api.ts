@@ -2,6 +2,7 @@ import { appState, type Segment, type StartupState } from './state.svelte';
 
 const FETCH_TIMEOUT_MS = 30_000;
 const STATUS_FETCH_TIMEOUT_MS = 5_000;
+const READINESS_POLL_INTERVAL_MS = 1_500;
 const WS_RECONNECT_DELAY_MS = 1_000;
 
 class ApiError extends Error {
@@ -87,7 +88,7 @@ export function pollUntilReady(onReady: () => void): () => void {
 				appState.startupMessage = 'Connecting to server...';
 			}
 
-			await new Promise((r) => setTimeout(r, 1500));
+			await new Promise((r) => setTimeout(r, READINESS_POLL_INTERVAL_MS));
 		}
 	}
 

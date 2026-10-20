@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { appState } from '$lib/state.svelte';
+	import { appState } from '#lib/state.svelte.js';
 
 	const HANG_THRESHOLD_MS = 30_000;
 
