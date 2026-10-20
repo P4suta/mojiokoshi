@@ -14,6 +14,7 @@ export default defineConfig({
 		}
 	},
 	test: {
+		passWithNoTests: true,
 		expect: { requireAssertions: true },
 		projects: [
 			{

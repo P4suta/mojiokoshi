@@ -45,6 +45,6 @@ are fast. No host-side Python or Node is needed — everything runs in container
 
 ## Learn more
 
-- [Full README](https://github.com/P4suta/mojiokoshi#readme) — configuration, development, troubleshooting
+- [Usage and development](usage.md) — configuration, development, troubleshooting
 - [Report an issue](https://github.com/P4suta/mojiokoshi/issues)
 - [License](https://github.com/P4suta/mojiokoshi/blob/main/LICENSE) — MIT
