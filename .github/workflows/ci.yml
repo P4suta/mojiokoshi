@@ -18,6 +18,7 @@ jobs:
   backend-lint:
     name: Backend Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -25,9 +26,11 @@ jobs:
 
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
+          version: 0.13.3
           enable-cache: true
 
       - run: uv sync --frozen --only-group dev
+      - run: uv audit --locked --python-version 3.12 --python-platform linux
       - run: uv run ruff check src/ tests/
       - run: uv run ruff format --check src/ tests/
       - run: uv run pyrefly check --output-format=github
@@ -42,6 +45,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
         with:
+          version: 0.13.3
           enable-cache: true
 
       - name: Install dependencies
@@ -122,6 +126,9 @@ jobs:
           persist-credentials: false
 
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+
+        with:
+          version: 0.13.3
 
       # Pre-seed with a valid, empty SARIF so upload-sarif always has a file
       # to consume, even if zizmor crashes or produces no output.

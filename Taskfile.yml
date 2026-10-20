@@ -47,6 +47,10 @@ tasks:
     cmd: docker build --tag mojiokoshi:latest .
 
   # ---------- Quality ----------
+  audit:
+    desc: Audit the locked Python dependencies
+    cmd: "{{.EXEC}} uv audit --locked --python-version 3.12 --python-platform linux"
+
   lint:
     desc: ruff + pyrefly (read-only)
     cmds:

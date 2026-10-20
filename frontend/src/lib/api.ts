@@ -1,6 +1,7 @@
 import { appState, type Segment, type StartupState } from './state.svelte';
 
 const FETCH_TIMEOUT_MS = 30_000;
+const STATUS_FETCH_TIMEOUT_MS = 5_000;
 const WS_RECONNECT_DELAY_MS = 1_000;
 
 class ApiError extends Error {
@@ -57,7 +58,7 @@ export interface StatusResponse {
 }
 
 export async function fetchStatus(): Promise<StatusResponse> {
-	const resp = await fetchWithTimeout('/api/status', undefined, 5000);
+	const resp = await fetchWithTimeout('/api/status', undefined, STATUS_FETCH_TIMEOUT_MS);
 	if (!resp.ok) {
 		throw new ApiError('Failed to fetch status', resp.status);
 	}

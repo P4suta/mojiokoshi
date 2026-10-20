@@ -28,7 +28,7 @@
 # tag, refresh its digest too — a tag/digest mismatch fails the pull, which is
 # the intended guard. Resolve a new digest with:
 #   docker buildx imagetools inspect <image:tag> --format '{{.Manifest.Digest}}'
-ARG UV_VERSION=0.11.8
+ARG UV_VERSION=0.13.3
 ARG CUDA_IMAGE=nvidia/cuda:12.9.2-cudnn-runtime-ubuntu24.04@sha256:070f8f2672df1b05b84c0409a5fd1d54ddfd646e5b9d8dee7878131271b563fc
 ARG PYTHON_VERSION=3.12
 
@@ -41,7 +41,7 @@ COPY frontend/ .
 RUN bun run build
 
 # ===== Stage 2: pinned uv binary =====
-FROM ghcr.io/astral-sh/uv:${UV_VERSION}@sha256:3b7b60a81d3c57ef471703e5c83fd4aaa33abcd403596fb22ab07db85ae91347 AS uv
+FROM ghcr.io/astral-sh/uv:${UV_VERSION}@sha256:bee0a2a458fd956c5df7b8b4c5fed2257b0af34866e3da7b51db0be3acb375d1 AS uv
 
 # ===== Stage 3: builder — populate /opt/venv with uv =====
 # This stage is intentionally not the final image. Only /opt/venv (and the
