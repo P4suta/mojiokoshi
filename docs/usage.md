@@ -117,6 +117,7 @@ With [Task](https://taskfile.dev/installation/) installed, all common dev comman
 ```bash
 task up             # Start the dev stack (GPU + hot reload)
 task shell          # Shell into the app container
+task audit          # Locked Python dependency audit
 task lint           # ruff + pyrefly (read-only)
 task fix            # ruff --fix + ruff format (writes)
 task test           # Fast test suite
@@ -133,6 +134,13 @@ Tests are enforced at 100% branch coverage.
 task test           # Fast suite
 task test:all       # Include integration + slow tests
 ```
+
+### Dependency audit
+
+Run `task audit` to check the locked Python dependencies for the Linux Python 3.12 runtime.
+CI runs the same check in the Python lint job.
+The pinned uv release supplies the audit command.
+The command remains an upstream preview feature.
 
 ### Linting and Formatting
 
