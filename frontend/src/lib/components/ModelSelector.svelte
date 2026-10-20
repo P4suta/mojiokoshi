@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { appState } from '$lib/state.svelte';
+	import { appState } from '#lib/state.svelte.js';
 
 	const currentModel = $derived(appState.config?.default_model ?? appState.modelSize);
 </script>

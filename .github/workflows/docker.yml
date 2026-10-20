@@ -12,7 +12,7 @@ on:
       - "frontend/package.json"
       - "frontend/bun.lock"
       - "frontend/src/**"
-      - "frontend/svelte.config.js"
+      - "frontend/tsconfig.json"
       - "frontend/vite.config.ts"
       # Edits to this workflow itself must re-run the build + Trivy, otherwise
       # a change to how the image is built/scanned ships unvalidated.
@@ -28,7 +28,7 @@ on:
       - "frontend/package.json"
       - "frontend/bun.lock"
       - "frontend/src/**"
-      - "frontend/svelte.config.js"
+      - "frontend/tsconfig.json"
       - "frontend/vite.config.ts"
       - ".github/workflows/docker.yml"
   workflow_dispatch:
