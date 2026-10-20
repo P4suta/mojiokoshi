@@ -52,7 +52,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
@@ -82,9 +82,7 @@ jobs:
       - name: Trivy vulnerability scan
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
-          # Track the latest Trivy scanner release rather than pinning to a
-          # specific one; the action itself is already ref-pinned.
-          version: latest
+          version: v0.76.0
           image-ref: mojiokoshi:ci
           format: sarif
           output: trivy.sarif
