@@ -6,6 +6,11 @@
       "description": "Keep the compiler version supported by SvelteKit and svelte-check.",
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
+    },
+    {
+      "description": "Keep Python on 3.14 until CTranslate2 and LibCST support a newer minor.",
+      "matchManagers": ["pyenv"],
+      "allowedVersions": "/^3\\.14(?:\\.\\d+)?$/"
     }
   ]
 }
