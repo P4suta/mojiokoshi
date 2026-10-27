@@ -3,6 +3,12 @@
   "extends": ["github>P4suta/renovate-config"],
   "packageRules": [
     {
+      "description": "Keep the container runtime compatible with the locked inference engine.",
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["nvidia/cuda"],
+      "allowedVersions": "/^12\\./"
+    },
+    {
       "description": "Keep the compiler version supported by SvelteKit and svelte-check.",
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
