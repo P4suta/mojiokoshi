@@ -29,7 +29,7 @@
 # the intended guard. Resolve a new digest with:
 #   docker buildx imagetools inspect <image:tag> --format '{{.Manifest.Digest}}'
 ARG UV_VERSION=0.13.3
-ARG CUDA_IMAGE=nvidia/cuda:12.9.2-cudnn-runtime-ubuntu24.04@sha256:070f8f2672df1b05b84c0409a5fd1d54ddfd646e5b9d8dee7878131271b563fc
+ARG CUDA_IMAGE=nvidia/cuda:13.4.3-cudnn-runtime-ubuntu24.04@sha256:534ea2e94fd17f053b4422d094f50a43a7e75a03240c4b89cbe9ad42085ec1c3
 ARG PYTHON_VERSION=3.12
 
 # ===== Stage 1: frontend build =====
