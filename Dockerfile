@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.28
+# syntax=docker/dockerfile:1.29
 #
 # Multi-stage build:
 #   1. frontend-build  — SvelteKit static build via Bun.
